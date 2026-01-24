@@ -11,7 +11,7 @@ import (
 // @Tags Root
 // @Success 200 {object} map[string]string
 // @Router / [get]
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+func rootHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Kasir API",
@@ -34,7 +34,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Products
 // @Success 200 {array} Product
 // @Router /api/products [get]
-func getProducts(w http.ResponseWriter, r *http.Request) {
+func getProducts(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(repo.FindAll())
 }
@@ -147,7 +147,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 // @Tags Categories
 // @Success 200 {array} Category
 // @Router /api/categories [get]
-func getCategories(w http.ResponseWriter, r *http.Request) {
+func getCategories(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(categoryRepo.FindAll())
 }
