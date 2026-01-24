@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 // @title Kasir API
@@ -19,16 +20,21 @@ func main() {
 	}
 
 	setupRoutes()
+	fmt.Println("Routes configured successfully")
 
 	// Channel to capture server startup errors
 	errChan := make(chan error, 1)
 
 	go func() {
+		fmt.Printf("Starting server on %s\n", server.Addr)
 		fmt.Println(GetServerRunningMsg())
 		if err := startServer(server); err != nil {
 			errChan <- err
 		}
 	}()
+
+	// Give server a moment to start listening
+	time.Sleep(100 * time.Millisecond)
 
 	// Wait for either shutdown signal or server error
 	quit := make(chan os.Signal, 1)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ func rootHandler(w http.ResponseWriter, _ *http.Request) {
 // @Success 200 {object} map[string]string
 // @Router /health [get]
 func healthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Health check called")
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(map[string]string{
 		"status":  "OK",
