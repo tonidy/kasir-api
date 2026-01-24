@@ -50,7 +50,7 @@ func TestMain_Integration(t *testing.T) {
 
 func TestMain_SignalHandling(t *testing.T) {
 	http.DefaultServeMux = new(http.ServeMux)
-	
+
 	server := &http.Server{
 		Addr: ":8082",
 	}
