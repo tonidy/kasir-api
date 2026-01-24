@@ -17,6 +17,10 @@ func GetServerHost() string {
 	if host := os.Getenv("SERVER_HOST"); host != "" {
 		return host
 	}
+	// Default to 0.0.0.0 if PORT env var exists (indicates cloud/container environment)
+	if os.Getenv("PORT") != "" {
+		return "0.0.0.0"
+	}
 	return "localhost"
 }
 

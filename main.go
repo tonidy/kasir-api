@@ -15,7 +15,7 @@ import (
 
 func main() {
 	server := &http.Server{
-		Addr: GetServerPort(),
+		Addr: GetServerHost() + GetServerPort(),
 	}
 
 	setupRoutes()
