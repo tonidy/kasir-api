@@ -24,7 +24,13 @@ Kasir API adalah aplikasi REST API sederhana untuk mengelola produk dan kategori
 ├── model.go          # Data models
 ├── constants.go      # Constants dan konfigurasi
 ├── *_test.go         # Unit tests
-└── Makefile          # Build automation
+├── docs/             # API documentation
+│   ├── index.html    # Scalar UI
+│   ├── swagger.yaml  # OpenAPI spec (YAML)
+│   └── swagger.json  # OpenAPI spec (JSON)
+├── Makefile          # Build automation
+├── go.mod            # Go module definition
+└── LICENSE           # MIT License
 ```
 
 ### Instalasi
