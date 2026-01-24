@@ -22,6 +22,11 @@ func GetServerHost() string {
 
 // GetServerPort returns the server port from env or default
 func GetServerPort() string {
+	// Check for PORT env var (used by most cloud platforms)
+	if port := os.Getenv("PORT"); port != "" {
+		return ":" + port
+	}
+	// Fallback to SERVER_PORT
 	if port := os.Getenv("SERVER_PORT"); port != "" {
 		return port
 	}
@@ -43,5 +48,10 @@ const (
 
 // GetServerRunningMsg returns the server running message with host and port
 func GetServerRunningMsg() string {
-	return "Server running at http://" + GetServerHost() + GetServerPort()
+	host := GetServerHost()
+	// In production, bind to 0.0.0.0 but show localhost in message
+	if host == "0.0.0.0" {
+		host = "localhost"
+	}
+	return "Server running at http://" + host + GetServerPort()
 }
