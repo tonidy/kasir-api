@@ -3,13 +3,13 @@
         "schemas": {
             "main.Category": {
                 "properties": {
-                    "deskripsi": {
+                    "description": {
                         "type": "string"
                     },
                     "id": {
                         "type": "integer"
                     },
-                    "nama": {
+                    "name": {
                         "type": "string"
                     }
                 },
@@ -17,16 +17,16 @@
             },
             "main.Product": {
                 "properties": {
-                    "harga": {
-                        "type": "integer"
-                    },
                     "id": {
                         "type": "integer"
                     },
-                    "nama": {
+                    "name": {
                         "type": "string"
                     },
-                    "stok": {
+                    "price": {
+                        "type": "integer"
+                    },
+                    "stock": {
                         "type": "integer"
                     }
                 },
@@ -35,7 +35,7 @@
         }
     },
     "info": {
-        "description": "REST API untuk mengelola produk dan kategori",
+        "description": "REST API for managing products and categories",
         "title": "Kasir API",
         "version": "1.0"
     },

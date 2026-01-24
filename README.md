@@ -131,7 +131,7 @@ Response:
 ```json
 {
   "status": "OK",
-  "pesan": "API berjalan dengan baik"
+  "message": "API is running"
 }
 ```
 
@@ -194,8 +194,8 @@ POST /api/categories
 Content-Type: application/json
 
 {
-  "name": "Makanan",
-  "description": "Kategori makanan"
+  "name": "Food",
+  "description": "Food category"
 }
 ```
 
@@ -205,8 +205,8 @@ PUT /api/categories/{id}
 Content-Type: application/json
 
 {
-  "name": "Makanan",
-  "description": "Kategori makanan dan minuman"
+  "name": "Food",
+  "description": "Food and beverage category"
 }
 ```
 

@@ -28,20 +28,20 @@ func GetServerPort() string {
 	return ":8300"
 }
 
-// Response messages in Indonesian
+// Response messages
 const (
-	MsgInvalidID        = "ID tidak valid"
-	MsgInvalidRequest   = "Request tidak valid"
-	MsgNotFound         = "Data tidak ditemukan"
-	MsgDeleteSuccess    = "Data berhasil dihapus"
-	MsgAPIRunning       = "API berjalan dengan baik"
-	MsgServerFailed     = "Gagal menjalankan server"
-	MsgShuttingDown     = "Menerima sinyal shutdown, menghentikan server..."
-	MsgShutdownComplete = "Server berhasil dihentikan"
-	MsgShutdownTimeout  = "Shutdown timeout, memaksa server berhenti"
+	MsgInvalidID        = "Invalid ID"
+	MsgInvalidRequest   = "Invalid request"
+	MsgNotFound         = "Data not found"
+	MsgDeleteSuccess    = "Data successfully deleted"
+	MsgAPIRunning       = "API is running 🔥"
+	MsgServerFailed     = "Failed to start server"
+	MsgShuttingDown     = "Received shutdown signal, stopping server..."
+	MsgShutdownComplete = "Server successfully stopped"
+	MsgShutdownTimeout  = "Shutdown timeout, forcing server to stop"
 )
 
 // GetServerRunningMsg returns the server running message with host and port
 func GetServerRunningMsg() string {
-	return "Server berjalan di http://" + GetServerHost() + GetServerPort()
+	return "Server running at http://" + GetServerHost() + GetServerPort()
 }

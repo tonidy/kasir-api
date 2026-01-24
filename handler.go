@@ -25,8 +25,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "OK",
-		"pesan":  MsgAPIRunning,
+		"status":  "OK",
+		"message": MsgAPIRunning,
 	})
 }
 
@@ -139,7 +139,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(map[string]string{
-		"pesan": MsgDeleteSuccess,
+		"message": MsgDeleteSuccess,
 	})
 }
 
@@ -252,6 +252,6 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", ContentTypeJSON)
 	json.NewEncoder(w).Encode(map[string]string{
-		"pesan": MsgDeleteSuccess,
+		"message": MsgDeleteSuccess,
 	})
 }

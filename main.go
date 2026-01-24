@@ -10,7 +10,7 @@ import (
 
 // @title Kasir API
 // @version 1.0
-// @description REST API untuk mengelola produk dan kategori
+// @description REST API for managing products and categories
 // @servers http://localhost:8300
 
 func main() {

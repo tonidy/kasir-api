@@ -2,29 +2,29 @@ components:
   schemas:
     main.Category:
       properties:
-        deskripsi:
+        description:
           type: string
         id:
           type: integer
-        nama:
+        name:
           type: string
       type: object
     main.Product:
       properties:
-        harga:
-          type: integer
         id:
           type: integer
-        nama:
+        name:
           type: string
-        stok:
+        price:
+          type: integer
+        stock:
           type: integer
       type: object
 externalDocs:
   description: ""
   url: ""
 info:
-  description: REST API untuk mengelola produk dan kategori
+  description: REST API for managing products and categories
   title: Kasir API
   version: "1.0"
 openapi: 3.1.0
