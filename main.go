@@ -20,18 +20,27 @@ func main() {
 
 	setupRoutes()
 
+	// Channel to capture server startup errors
+	errChan := make(chan error, 1)
+
 	go func() {
 		fmt.Println(GetServerRunningMsg())
 		if err := startServer(server); err != nil {
-			fmt.Println(MsgServerFailed)
+			errChan <- err
 		}
 	}()
 
+	// Wait for either shutdown signal or server error
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
 
-	fmt.Println(MsgShuttingDown)
+	select {
+	case err := <-errChan:
+		fmt.Println(MsgServerFailed, err)
+		os.Exit(1)
+	case <-quit:
+		fmt.Println(MsgShuttingDown)
+	}
 
 	if err := stopServer(server, ShutdownTimeout); err != nil {
 		fmt.Println(MsgShutdownTimeout)
