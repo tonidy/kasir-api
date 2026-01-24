@@ -8,6 +8,11 @@ import (
 	"syscall"
 )
 
+// @title Kasir API
+// @version 1.0
+// @description REST API untuk mengelola produk dan kategori
+// @servers http://localhost:8300
+
 func main() {
 	server := &http.Server{
 		Addr: GetServerPort(),

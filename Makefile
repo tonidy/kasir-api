@@ -1,4 +1,4 @@
-.PHONY: help build run test coverage dev clean
+.PHONY: help build run test coverage dev clean docs
 
 help:
 	@echo "Available targets:"
@@ -7,6 +7,7 @@ help:
 	@echo "  make test      - Run tests"
 	@echo "  make coverage  - Run tests with coverage"
 	@echo "  make dev       - Run with hot reload (requires air)"
+	@echo "  make docs      - Generate OpenAPI documentation"
 	@echo "  make clean     - Clean build artifacts"
 
 build:
@@ -16,7 +17,7 @@ run:
 	go run .
 
 test:
-	go test -v ./...
+	go test -v -cover ./...
 
 coverage:
 	go test -v -coverprofile=coverage.out ./...
@@ -25,6 +26,9 @@ coverage:
 
 dev:
 	air
+
+docs:
+	~/tools/go/bin/swag init --v3.1 --outputTypes yaml,json
 
 clean:
 	rm -f kasir-api coverage.out coverage.html

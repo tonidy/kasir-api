@@ -86,6 +86,24 @@ make dev
 make clean
 ```
 
+### API Documentation
+
+Interactive API documentation is available via Scalar:
+
+```bash
+# Start the server
+go run .
+
+# Open in browser
+http://localhost:8300/docs
+```
+
+The documentation is generated from OpenAPI 3.0 specification and provides:
+- Interactive API explorer
+- Request/response examples
+- Schema definitions
+- Try-it-out functionality
+
 ### API Endpoints
 
 #### Root

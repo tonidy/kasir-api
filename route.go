@@ -1,9 +1,12 @@
 package main
 
 import (
-	"encoding/json"
+	_ "embed"
 	"net/http"
 )
+
+//go:embed docs/index.html
+var docsHTML []byte
 
 func setupRoutes() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -11,19 +14,10 @@ func setupRoutes() {
 			http.NotFound(w, r)
 			return
 		}
-		w.Header().Set("Content-Type", ContentTypeJSON)
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Kasir API",
-		})
+		rootHandler(w, r)
 	})
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", ContentTypeJSON)
-		json.NewEncoder(w).Encode(map[string]string{
-			"status": "OK",
-			"pesan":  MsgAPIRunning,
-		})
-	})
+	http.HandleFunc("/health", healthHandler)
 
 	http.HandleFunc("/api/products/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -39,20 +33,9 @@ func setupRoutes() {
 	http.HandleFunc("/api/products", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", ContentTypeJSON)
-			json.NewEncoder(w).Encode(repo.FindAll())
+			getProducts(w, r)
 		case http.MethodPost:
-			var newProduct Product
-			err := json.NewDecoder(r.Body).Decode(&newProduct)
-			if err != nil {
-				http.Error(w, MsgInvalidRequest, http.StatusBadRequest)
-				return
-			}
-
-			created := repo.Create(newProduct)
-			w.Header().Set("Content-Type", ContentTypeJSON)
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(created)
+			createProduct(w, r)
 		}
 	})
 
@@ -70,20 +53,16 @@ func setupRoutes() {
 	http.HandleFunc("/api/categories", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", ContentTypeJSON)
-			json.NewEncoder(w).Encode(categoryRepo.FindAll())
+			getCategories(w, r)
 		case http.MethodPost:
-			var newCategory Category
-			err := json.NewDecoder(r.Body).Decode(&newCategory)
-			if err != nil {
-				http.Error(w, MsgInvalidRequest, http.StatusBadRequest)
-				return
-			}
-
-			created := categoryRepo.Create(newCategory)
-			w.Header().Set("Content-Type", ContentTypeJSON)
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(created)
+			createCategory(w, r)
 		}
 	})
+
+	http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(docsHTML)
+	})
+
+	http.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("docs"))))
 }
