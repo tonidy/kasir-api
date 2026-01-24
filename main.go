@@ -38,7 +38,8 @@ func main() {
 	case err := <-errChan:
 		fmt.Println(MsgServerFailed, err)
 		os.Exit(1)
-	case <-quit:
+	case sig := <-quit:
+		fmt.Printf("Received signal: %v\n", sig)
 		fmt.Println(MsgShuttingDown)
 	}
 
