@@ -55,3 +55,4 @@ Agents should prioritize these commands for verification and maintenance.
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
+Use 'bd' for task tracking
