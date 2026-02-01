@@ -1,14 +1,14 @@
-# Binary Size Comparison
+# Binary Size History
 
-This document compares the application size and dependencies between the initial implementation (main branch) and the refactored clean architecture (task-session-2 branch).
+This document tracks the evolution of the application's binary size and dependencies over time.
 
-## Main Branch (Initial Implementation)
+## Timeline
 
-**Binary Size:**
-```bash
-$ du -sh kasir-api
-7.9M    kasir-api
-```
+### Phase 1: Initial Implementation (Commit: initial)
+**Date:** Early development  
+**Branch:** main
+
+**Binary Size:** 7.9M
 
 **Dependencies:**
 ```go
@@ -17,139 +17,192 @@ module kasir-api
 go 1.25.6
 ```
 
-**Characteristics:**
+**Features:**
+- In-memory storage only
+- Standard library HTTP server
 - Zero external dependencies
-- Pure standard library implementation
-- Monolithic structure (single file)
-- Smaller binary size
+- Monolithic structure
 
-## Task-Session-2 Branch (Clean Architecture)
+---
 
-**Binary Size:**
-```bash
-$ du -sh bin/kasir-api
-15M     bin/kasir-api
-```
+### Phase 2: Clean Architecture + PostgreSQL (Commit: 0c833ed)
+**Date:** 2026-02-01  
+**Branch:** task-session-2
 
-**Dependencies:**
+**Binary Size:** 15M (+7.1M, +90%)
+
+**Dependencies Added:**
 ```go
-module kasir-api
-
-go 1.25.6
-
 require (
-	github.com/jackc/pgx/v5 v5.8.0
-	github.com/knadh/koanf/parsers/dotenv v1.1.1
-	github.com/knadh/koanf/providers/env/v2 v2.0.0
-	github.com/knadh/koanf/providers/file v1.2.1
-	github.com/knadh/koanf/v2 v2.3.2
-	github.com/pressly/goose/v3 v3.26.0
-)
-
-require (
-	// ... 17 indirect dependencies
+	github.com/jackc/pgx/v5 v5.8.0              // PostgreSQL driver
+	github.com/knadh/koanf/parsers/dotenv v1.1.1 // .env parser
+	github.com/knadh/koanf/providers/env/v2 v2.0.0 // Env provider
+	github.com/knadh/koanf/providers/file v1.2.1  // File provider
+	github.com/knadh/koanf/v2 v2.3.2             // Config management
+	github.com/pressly/goose/v3 v3.26.0          // Database migrations
 )
 ```
 
 **Dependency Stats:**
-- `go.mod`: 32 lines
-- `go.sum`: 77 lines
-- Total: 109 lines
+- Direct: 6 packages
+- Indirect: 17 packages
+- Total: 23 packages
+- go.mod: 32 lines
+- go.sum: 77 lines
 
-**Characteristics:**
-- 6 direct dependencies
-- 17 indirect dependencies
-- Layered architecture (domain, repository, service, handler)
-- PostgreSQL support with connection pooling
-- Configuration management (.env support)
-- Database migrations with goose
-- Larger binary size due to additional features
+**Size Breakdown (estimated):**
+- Base application: ~3M
+- pgx/v5: ~4-5M
+- koanf: ~1-2M
+- goose: ~1-2M
+- Other dependencies: ~2-3M
 
-## Size Increase Analysis
+**Features Added:**
+- ✅ Layered architecture (domain, repository, service, handler)
+- ✅ PostgreSQL support with connection pooling
+- ✅ In-memory fallback (dual storage)
+- ✅ Configuration management (.env + environment variables)
+- ✅ Database migrations (goose)
+- ✅ Database seeding
+- ✅ Row Level Security (RLS) support
+- ✅ Dependency injection
+- ✅ SOLID principles
+- ✅ Comprehensive test coverage
 
-| Metric | Main | Task-Session-2 | Increase |
-|--------|------|----------------|----------|
-| Binary Size | 7.9M | 15M | +7.1M (90%) |
-| Direct Dependencies | 0 | 6 | +6 |
-| Total Dependencies | 0 | 23 | +23 |
+**Architecture:**
+```
+internal/
+├── config/      # Configuration management
+├── database/    # DB connection & migrations
+├── model/       # Domain entities
+├── repository/  # Data access (memory + postgres)
+├── service/     # Business logic
+└── handler/     # HTTP handlers
+```
 
-## What Adds to Binary Size?
+---
 
-1. **pgx/v5 (PostgreSQL driver)** - ~4-5M
-   - Full-featured PostgreSQL driver
-   - Connection pooling
-   - Prepared statements support
+## Size Comparison Table
 
-2. **koanf (Configuration)** - ~1-2M
-   - Environment variable parsing
-   - .env file support
-   - Multiple providers
+| Phase | Date | Binary Size | Change | Dependencies | Key Features |
+|-------|------|-------------|--------|--------------|--------------|
+| 1 | Initial | 7.9M | - | 0 | In-memory, stdlib only |
+| 2 | 2026-02-01 | 15M | +7.1M (+90%) | 23 | PostgreSQL, migrations, config |
 
-3. **goose (Migrations)** - ~1-2M
-   - Migration management
-   - Up/Down migration support
-   - Version tracking
-
-## Trade-offs
-
-### Main Branch Advantages
-✅ Smaller binary (7.9M)
-✅ Zero dependencies
-✅ Faster compilation
-✅ Simpler deployment
-
-### Task-Session-2 Advantages
-✅ Clean architecture (maintainable)
-✅ SOLID principles
-✅ PostgreSQL support
-✅ Database migrations
-✅ Configuration management
-✅ Testable design
-✅ Production-ready features
+---
 
 ## Optimization Options
 
-If binary size is critical, you can:
+If binary size becomes a concern, consider:
 
-1. **Build with compression:**
+### 1. Build with Compression
+```bash
+# Strip debug symbols
+go build -ldflags="-s -w" -o bin/kasir-api ./cmd/api/
+
+# Compress with UPX
+upx --best --lzma bin/kasir-api
+```
+**Expected size:** ~5-6M (60% reduction)
+
+### 2. Alternative Dependencies
+- Replace `pgx/v5` with `lib/pq` (smaller, less features)
+- Replace `koanf` with `os.Getenv()` (no .env support)
+- Replace `goose` with custom migration runner
+
+### 3. Build Tags
+```bash
+# Build without PostgreSQL support
+go build -tags=nomemory -o bin/kasir-api ./cmd/api/
+```
+
+---
+
+## Analysis
+
+### Why Size Increases?
+
+1. **Database Drivers** - Full-featured drivers include:
+   - Protocol implementations
+   - Type conversions
+   - Connection pooling
+   - Error handling
+
+2. **Configuration Libraries** - Include:
+   - Multiple parsers (env, file, dotenv)
+   - Type conversion
+   - Validation
+
+3. **Migration Tools** - Include:
+   - SQL parsing
+   - Version tracking
+   - Rollback support
+
+### Is It Worth It?
+
+**Yes, for production applications:**
+- Maintainability > Binary size
+- Features > Minimal footprint
+- Developer experience > Deployment size
+
+**No, if:**
+- Embedded systems (size-constrained)
+- Edge computing (bandwidth-limited)
+- Simple prototypes
+- Learning projects
+
+---
+
+## Future Considerations
+
+As the application grows, monitor:
+- Binary size per major feature
+- Dependency count
+- Build time
+- Deployment size
+
+**Target thresholds:**
+- ⚠️ Binary > 50M: Review dependencies
+- ⚠️ Dependencies > 50: Consider consolidation
+- ⚠️ Build time > 1min: Optimize build process
+
+---
+
+## How to Update This Document
+
+When adding new dependencies:
+
+1. **Build and measure:**
    ```bash
-   go build -ldflags="-s -w" -o bin/kasir-api ./cmd/api/
-   upx --best --lzma bin/kasir-api
+   make build
+   du -sh bin/kasir-api
    ```
-   Expected size: ~5-6M (60% reduction)
 
-2. **Remove unused features:**
-   - Use in-memory only (remove pgx)
-   - Use environment variables only (remove koanf)
-   - Manual migrations (remove goose)
+2. **Count dependencies:**
+   ```bash
+   wc -l go.mod go.sum
+   ```
 
-3. **Use standard library alternatives:**
-   - `database/sql` with `lib/pq` (smaller than pgx)
-   - `os.Getenv()` instead of koanf
-   - Custom migration runner
+3. **Add new phase:**
+   - Date and commit hash
+   - Binary size and change
+   - New dependencies with purpose
+   - Features added
 
-## Conclusion
+4. **Update comparison table**
 
-The **90% size increase** (7.9M → 15M) is justified by:
-- Production-ready database support
-- Professional configuration management
-- Automated migration system
-- Clean, maintainable architecture
-- Comprehensive test coverage
+---
 
-For production applications, the additional 7.1M is a worthwhile trade-off for maintainability, testability, and feature completeness.
+## Recommendations
 
-## Recommendation
+**Current Phase (Phase 2):**
+- ✅ Binary size is acceptable for production (15M)
+- ✅ Dependencies are well-justified
+- ✅ Architecture supports long-term maintenance
+- ✅ No optimization needed at this stage
 
-**Use Main Branch if:**
-- Building a simple prototype
-- Binary size is critical (embedded systems)
-- No database required
-- Learning Go basics
-
-**Use Task-Session-2 if:**
-- Building production applications
-- Need database persistence
-- Team collaboration
-- Long-term maintenance
-- Professional deployment
+**Monitor for Phase 3:**
+- If adding observability (Prometheus, OpenTelemetry)
+- If adding API documentation (Swagger/OpenAPI)
+- If adding authentication (JWT, OAuth)
+- If adding caching (Redis client)
