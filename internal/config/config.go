@@ -40,7 +40,10 @@ func Load() (*Config, error) {
 
 	// Load from .env file if it exists
 	if _, err := os.Stat(".env"); err == nil {
-		if err := k.Load(file.Provider(".env"), dotenv.Parser()); err != nil {
+		if err := k.Load(file.Provider(".env"), dotenv.ParserEnv("APP_", ".", func(s string) string {
+			return strings.Replace(strings.ToLower(
+				strings.TrimPrefix(s, "APP_")), "_", ".", -1)
+		})); err != nil {
 			return nil, fmt.Errorf("failed to load .env file: %w", err)
 		}
 	}
