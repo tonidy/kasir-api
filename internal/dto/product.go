@@ -9,10 +9,9 @@ type CategoryResponse struct {
 
 // ProductResponse represents product data with category information for API responses
 type ProductResponse struct {
-	ID         int               `json:"id"`
-	Name       string            `json:"name"`
-	Price      int               `json:"price"`
-	Stock      int               `json:"stock"`
-	CategoryID *int              `json:"category_id,omitempty"`
-	Category   *CategoryResponse `json:"category,omitempty"`
+	ID       int               `json:"id"`
+	Name     string            `json:"name"`
+	Price    int               `json:"price"`
+	Stock    int               `json:"stock"`
+	Category *CategoryResponse `json:"category,omitempty"`
 }

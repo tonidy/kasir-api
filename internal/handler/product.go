@@ -44,12 +44,11 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		response[i] = dto.ProductResponse{
-			ID:         p.ID,
-			Name:       p.Name,
-			Price:      p.Price,
-			Stock:      p.Stock,
-			CategoryID: p.CategoryID,
-			Category:   catResp,
+			ID:       p.ID,
+			Name:     p.Name,
+			Price:    p.Price,
+			Stock:    p.Stock,
+			Category: catResp,
 		}
 	}
 
@@ -69,9 +68,9 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var catResp *dto.CategoryResponse
+	var categoryResp *dto.CategoryResponse
 	if product.Category != nil {
-		catResp = &dto.CategoryResponse{
+		categoryResp = &dto.CategoryResponse{
 			ID:          product.Category.ID,
 			Name:        product.Category.Name,
 			Description: product.Category.Description,
@@ -79,12 +78,11 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := dto.ProductResponse{
-		ID:         product.ID,
-		Name:       product.Name,
-		Price:      product.Price,
-		Stock:      product.Stock,
-		CategoryID: product.CategoryID,
-		Category:   catResp,
+		ID:       product.ID,
+		Name:     product.Name,
+		Price:    product.Price,
+		Stock:    product.Stock,
+		Category: categoryResp,
 	}
 
 	httputil.WriteJSON(w, http.StatusOK, response)
