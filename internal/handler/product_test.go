@@ -13,18 +13,18 @@ import (
 
 // Mock service for testing
 type mockProductService struct {
-	getByIDFunc func(ctx context.Context, id int) (*model.ProductWithCategory, error)
-	getAllFunc  func(ctx context.Context) ([]model.ProductWithCategory, error)
+	getByIDFunc func(ctx context.Context, id int) (*model.Product, error)
+	getAllFunc  func(ctx context.Context) ([]model.Product, error)
 	createFunc  func(ctx context.Context, p model.Product) (*model.Product, error)
 	updateFunc  func(ctx context.Context, id int, p model.Product) (*model.Product, error)
 	deleteFunc  func(ctx context.Context, id int) error
 }
 
-func (m *mockProductService) GetByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+func (m *mockProductService) GetByID(ctx context.Context, id int) (*model.Product, error) {
 	return m.getByIDFunc(ctx, id)
 }
 
-func (m *mockProductService) GetAll(ctx context.Context) ([]model.ProductWithCategory, error) {
+func (m *mockProductService) GetAll(ctx context.Context) ([]model.Product, error) {
 	return m.getAllFunc(ctx)
 }
 
@@ -42,10 +42,10 @@ func (m *mockProductService) Delete(ctx context.Context, id int) error {
 
 func TestProductHandler_GetAll(t *testing.T) {
 	mockSvc := &mockProductService{
-		getAllFunc: func(ctx context.Context) ([]model.ProductWithCategory, error) {
-			return []model.ProductWithCategory{
-				{Product: model.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10}},
-				{Product: model.Product{ID: 2, Name: "Product 2", Price: 2000, Stock: 20}},
+		getAllFunc: func(ctx context.Context) ([]model.Product, error) {
+			return []model.Product{
+				{ID: 1, Name: "Product 1", Price: 1000, Stock: 10},
+				{ID: 2, Name: "Product 2", Price: 2000, Stock: 20},
 			}, nil
 		},
 	}
@@ -60,7 +60,7 @@ func TestProductHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status 200, got %d", w.Code)
 	}
 
-	var products []model.ProductWithCategory
+	var products []model.Product
 	json.NewDecoder(w.Body).Decode(&products)
 	if len(products) != 2 {
 		t.Errorf("Expected 2 products, got %d", len(products))
@@ -69,10 +69,8 @@ func TestProductHandler_GetAll(t *testing.T) {
 
 func TestProductHandler_GetByID(t *testing.T) {
 	mockSvc := &mockProductService{
-		getByIDFunc: func(ctx context.Context, id int) (*model.ProductWithCategory, error) {
-			return &model.ProductWithCategory{
-				Product: model.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10},
-			}, nil
+		getByIDFunc: func(ctx context.Context, id int) (*model.Product, error) {
+			return &model.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10}, nil
 		},
 	}
 
@@ -89,7 +87,7 @@ func TestProductHandler_GetByID(t *testing.T) {
 
 func TestProductHandler_GetByID_NotFound(t *testing.T) {
 	mockSvc := &mockProductService{
-		getByIDFunc: func(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+		getByIDFunc: func(ctx context.Context, id int) (*model.Product, error) {
 			return nil, model.ErrNotFound
 		},
 	}

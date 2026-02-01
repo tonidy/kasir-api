@@ -16,27 +16,38 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Product, error) {
 	query := `
-		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.name as category_name
+		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.id, c.name, c.description
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE p.id = $1`
 
-	var p model.ProductWithCategory
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName)
+	var p model.Product
+	var catID sql.NullInt64
+	var catName, catDesc sql.NullString
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &catID, &catName, &catDesc)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, model.ErrNotFound
 		}
 		return nil, err
 	}
+
+	if catID.Valid {
+		p.Category = &model.Category{
+			ID:          int(catID.Int64),
+			Name:        catName.String,
+			Description: catDesc.String,
+		}
+	}
+
 	return &p, nil
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context) ([]model.ProductWithCategory, error) {
+func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error) {
 	query := `
-		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.name as category_name
+		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.id, c.name, c.description
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		ORDER BY p.id`
@@ -47,12 +58,23 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]model.ProductWithCat
 	}
 	defer rows.Close()
 
-	var products []model.ProductWithCategory
+	var products []model.Product
 	for rows.Next() {
-		var p model.ProductWithCategory
-		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName); err != nil {
+		var p model.Product
+		var catID sql.NullInt64
+		var catName, catDesc sql.NullString
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &catID, &catName, &catDesc); err != nil {
 			return nil, err
 		}
+
+		if catID.Valid {
+			p.Category = &model.Category{
+				ID:          int(catID.Int64),
+				Name:        catName.String,
+				Description: catDesc.String,
+			}
+		}
+
 		products = append(products, p)
 	}
 

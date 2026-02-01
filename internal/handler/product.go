@@ -11,8 +11,8 @@ import (
 )
 
 type ProductService interface {
-	GetByID(ctx context.Context, id int) (*model.ProductWithCategory, error)
-	GetAll(ctx context.Context) ([]model.ProductWithCategory, error)
+	GetByID(ctx context.Context, id int) (*model.Product, error)
+	GetAll(ctx context.Context) ([]model.Product, error)
 	Create(ctx context.Context, p model.Product) (*model.Product, error)
 	Update(ctx context.Context, id int, p model.Product) (*model.Product, error)
 	Delete(ctx context.Context, id int) error
@@ -35,13 +35,21 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	response := make([]dto.ProductResponse, len(products))
 	for i, p := range products {
+		var catResp *dto.CategoryResponse
+		if p.Category != nil {
+			catResp = &dto.CategoryResponse{
+				ID:          p.Category.ID,
+				Name:        p.Category.Name,
+				Description: p.Category.Description,
+			}
+		}
 		response[i] = dto.ProductResponse{
-			ID:           p.ID,
-			Name:         p.Name,
-			Price:        p.Price,
-			Stock:        p.Stock,
-			CategoryID:   p.CategoryID,
-			CategoryName: p.CategoryName,
+			ID:         p.ID,
+			Name:       p.Name,
+			Price:      p.Price,
+			Stock:      p.Stock,
+			CategoryID: p.CategoryID,
+			Category:   catResp,
 		}
 	}
 
@@ -61,13 +69,22 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var catResp *dto.CategoryResponse
+	if product.Category != nil {
+		catResp = &dto.CategoryResponse{
+			ID:          product.Category.ID,
+			Name:        product.Category.Name,
+			Description: product.Category.Description,
+		}
+	}
+
 	response := dto.ProductResponse{
-		ID:           product.ID,
-		Name:         product.Name,
-		Price:        product.Price,
-		Stock:        product.Stock,
-		CategoryID:   product.CategoryID,
-		CategoryName: product.CategoryName,
+		ID:         product.ID,
+		Name:       product.Name,
+		Price:      product.Price,
+		Stock:      product.Stock,
+		CategoryID: product.CategoryID,
+		Category:   catResp,
 	}
 
 	httputil.WriteJSON(w, http.StatusOK, response)

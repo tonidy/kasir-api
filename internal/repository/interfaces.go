@@ -7,8 +7,8 @@ import (
 
 // ProductReader defines read operations for products
 type ProductReader interface {
-	FindByID(ctx context.Context, id int) (*model.ProductWithCategory, error)
-	FindAll(ctx context.Context) ([]model.ProductWithCategory, error)
+	FindByID(ctx context.Context, id int) (*model.Product, error)
+	FindAll(ctx context.Context) ([]model.Product, error)
 }
 
 // ProductWriter defines write operations for products

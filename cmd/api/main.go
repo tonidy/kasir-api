@@ -254,10 +254,10 @@ func runMigrateReset() {
 
 	fmt.Println("⚠️  WARNING: This will drop all tables and data!")
 	fmt.Print("Are you sure? Type 'yes' to confirm: ")
-	
+
 	var confirm string
 	fmt.Scanln(&confirm)
-	
+
 	if confirm != "yes" {
 		fmt.Println("Migration reset cancelled")
 		return

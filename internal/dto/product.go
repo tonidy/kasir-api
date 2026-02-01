@@ -1,11 +1,18 @@
 package dto
 
+// CategoryResponse represents category data for API responses
+type CategoryResponse struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // ProductResponse represents product data with category information for API responses
 type ProductResponse struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	Price        int     `json:"price"`
-	Stock        int     `json:"stock"`
-	CategoryID   *int    `json:"category_id,omitempty"`
-	CategoryName *string `json:"category_name,omitempty"`
+	ID         int               `json:"id"`
+	Name       string            `json:"name"`
+	Price      int               `json:"price"`
+	Stock      int               `json:"stock"`
+	CategoryID *int              `json:"category_id,omitempty"`
+	Category   *CategoryResponse `json:"category,omitempty"`
 }

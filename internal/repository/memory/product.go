@@ -25,20 +25,18 @@ func (r *ProductRepository) SetCategoryRepo(catRepo *CategoryRepository) {
 	r.catRepo = catRepo
 }
 
-func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Product, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	for _, p := range r.data {
 		if p.ID == id {
-			result := model.ProductWithCategory{
-				Product: p,
-			}
+			result := p
 
-			// Get category name if category_id exists
+			// Get category if category_id exists
 			if p.CategoryID != nil && r.catRepo != nil {
 				if cat, err := r.catRepo.FindByID(ctx, *p.CategoryID); err == nil {
-					result.CategoryName = &cat.Name
+					result.Category = cat
 				}
 			}
 
@@ -48,20 +46,18 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Produc
 	return nil, model.ErrNotFound
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context) ([]model.ProductWithCategory, error) {
+func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	results := make([]model.ProductWithCategory, 0, len(r.data))
+	results := make([]model.Product, 0, len(r.data))
 	for _, p := range r.data {
-		result := model.ProductWithCategory{
-			Product: p,
-		}
+		result := p
 
-		// Get category name if category_id exists
+		// Get category if category_id exists
 		if p.CategoryID != nil && r.catRepo != nil {
 			if cat, err := r.catRepo.FindByID(ctx, *p.CategoryID); err == nil {
-				result.CategoryName = &cat.Name
+				result.Category = cat
 			}
 		}
 

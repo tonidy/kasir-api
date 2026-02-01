@@ -19,11 +19,11 @@ func NewProductService(reader repository.ProductReader, writer repository.Produc
 	}
 }
 
-func (s *ProductService) GetByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+func (s *ProductService) GetByID(ctx context.Context, id int) (*model.Product, error) {
 	return s.reader.FindByID(ctx, id)
 }
 
-func (s *ProductService) GetAll(ctx context.Context) ([]model.ProductWithCategory, error) {
+func (s *ProductService) GetAll(ctx context.Context) ([]model.Product, error) {
 	return s.reader.FindAll(ctx)
 }
 
