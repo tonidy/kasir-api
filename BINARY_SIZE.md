@@ -6,7 +6,7 @@ This document tracks the evolution of the application's binary size and dependen
 
 | Phase | Date       | Binary Size | Change       | Dependencies | Key Features                   |
 | ----- | ---------- | ----------- | ------------ | ------------ | ------------------------------ |
-| 1     | Initial    | 7.9M        | -            | 0            | In-memory, stdlib only         |
+| 1     | 2025-01-25 | 7.9M        | -            | 0            | In-memory, stdlib only         |
 | 2     | 2026-02-01 | 15M         | +7.1M (+90%) | 23           | PostgreSQL, migrations, config |
 
 ## Timeline
