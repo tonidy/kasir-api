@@ -1,4 +1,4 @@
-.PHONY: help build run test coverage dev clean docs audit
+.PHONY: help build run test coverage dev clean docs audit migrate
 
 help:
 	@echo "Available targets:"
@@ -9,13 +9,14 @@ help:
 	@echo "  make dev       - Run with hot reload (requires air)"
 	@echo "  make docs      - Generate OpenAPI documentation"
 	@echo "  make audit     - Tidy, format, vet, and run static check"
+	@echo "  make migrate   - Run database migrations"
 	@echo "  make clean     - Clean build artifacts"
 
 build:
-	go build -o kasir-api
+	go build -o bin/kasir-api ./cmd/api/
 
 run:
-	go run .
+	go run ./cmd/api/
 
 test:
 	go test -v -cover ./...
@@ -31,6 +32,9 @@ dev:
 docs:
 	~/tools/go/bin/swag init --v3.1 --outputTypes yaml,json
 
+migrate:
+	./bin/kasir-api migrate
+
 audit:
 	@echo 'Tidying and verifying module dependencies...'
 	go mod tidy
@@ -42,4 +46,4 @@ audit:
 	staticcheck ./...
 
 clean:
-	rm -f kasir-api coverage.out coverage.html
+	rm -rf bin/ coverage.out coverage.html

@@ -1,39 +1,78 @@
 # Bootcamp Jago Golang Dasar
 
-## Task Session 1
+## Kasir API - Clean Architecture Implementation
 
-### Deskripsi
-Kasir API adalah aplikasi REST API sederhana untuk mengelola produk dan kategori. Dibangun menggunakan Go dengan arsitektur yang bersih dan terstruktur.
+### Description
+Kasir API is a REST API application for managing products and categories. Built using Go with **Clean Architecture**, **SOLID principles**, and **Test-Driven Development (TDD)**.
 
-### Fitur
-- CRUD (Create, Read, Update, Delete) Produk
-- CRUD Kategori
-- In-memory storage
-- Graceful shutdown
-- Health check endpoint
-- Environment variable configuration
+### Features
+- ✅ CRUD (Create, Read, Update, Delete) Products
+- ✅ CRUD Categories
+- ✅ Dual storage: In-memory & PostgreSQL/Supabase
+- ✅ Database migrations
+- ✅ Configuration management (Koanf)
+- ✅ Graceful shutdown
+- ✅ Health check endpoint
+- ✅ Comprehensive test coverage
+- ✅ SOLID principles implementation
+- ✅ Dependency Injection
 
-### Struktur Proyek
+### Architecture
+
 ```
-.
-├── main.go           # Entry point aplikasi
-├── server.go         # Server lifecycle management
-├── route.go          # Route definitions
-├── handler.go        # HTTP handlers
-├── repository.go     # Data access layer
-├── model.go          # Data models
-├── constants.go      # Constants dan konfigurasi
-├── *_test.go         # Unit tests
-├── docs/             # API documentation
-│   ├── index.html    # Scalar UI
-│   ├── swagger.yaml  # OpenAPI spec (YAML)
-│   └── swagger.json  # OpenAPI spec (JSON)
-├── Makefile          # Build automation
-├── go.mod            # Go module definition
-└── LICENSE           # MIT License
+cmd/
+└── api/
+    └── main.go              # Entry point with DI container
+internal/
+├── config/                  # Configuration management (Koanf)
+│   ├── config.go
+│   └── config_test.go
+├── database/                # Database connection & migrations
+│   ├── postgres.go
+│   ├── migrate.go
+│   └── *_test.go
+├── model/                   # Domain entities with validation
+│   ├── product.go
+│   ├── category.go
+│   ├── errors.go
+│   └── *_test.go
+├── dto/                     # Data Transfer Objects
+│   └── product.go
+├── repository/              # Data access layer
+│   ├── interfaces.go        # Repository interfaces (ISP)
+│   ├── memory/              # In-memory implementation
+│   │   ├── product.go
+│   │   ├── category.go
+│   │   └── *_test.go
+│   └── postgres/            # PostgreSQL implementation
+│       ├── product.go
+│       ├── category.go
+│       └── *_test.go
+├── service/                 # Business logic layer
+│   ├── product.go
+│   ├── category.go
+│   └── *_test.go
+└── handler/                 # HTTP handlers
+    ├── product.go
+    ├── category.go
+    ├── health.go
+    └── routes.go
+pkg/
+└── httputil/                # HTTP utilities
+    └── response.go
+migrations/
+└── 001_init.sql             # Database migrations
 ```
 
-### Instalasi
+### SOLID Principles Applied
+
+- **S (Single Responsibility)**: Each layer has a single responsibility
+- **O (Open/Closed)**: Easy to extend without modifying existing code
+- **L (Liskov Substitution)**: In-memory and PostgreSQL repos are interchangeable
+- **I (Interface Segregation)**: Small and focused interfaces (Reader/Writer)
+- **D (Dependency Inversion)**: Depend on abstractions, not concretions
+
+### Installation
 
 ```bash
 # Clone repository
@@ -42,54 +81,110 @@ cd kasir-api
 
 # Install dependencies
 go mod download
+
+# Build application
+make build
 ```
 
-### Konfigurasi
+### Configuration
 
-Aplikasi menggunakan environment variables:
+Application uses environment variables with `APP_` prefix:
 
-| Variable | Default | Deskripsi |
-|----------|---------|-----------|
-| `SERVER_HOST` | `localhost` | Host server |
-| `SERVER_PORT` | `:8300` | Port server |
+**Server Configuration:**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_SERVER_HOST` | `localhost` | Server host |
+| `APP_SERVER_PORT` | `:8300` | Server port |
+| `APP_SERVER_READTIMEOUT` | `10s` | Read timeout |
+| `APP_SERVER_WRITETIMEOUT` | `10s` | Write timeout |
 
-### Menjalankan Aplikasi
+**Database Configuration (Optional):**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_DATABASE_HOST` | - | Database host |
+| `APP_DATABASE_PORT` | `5432` | Database port |
+| `APP_DATABASE_USER` | - | Database user |
+| `APP_DATABASE_PASSWORD` | - | Database password |
+| `APP_DATABASE_DBNAME` | - | Database name |
+| `APP_DATABASE_SSLMODE` | `require` | SSL mode |
+| `APP_DATABASE_MAXCONNS` | `25` | Max connections |
+| `APP_DATABASE_MINCONNS` | `5` | Min connections |
 
-#### Menggunakan Go
+**Note:** If database is not configured, application will use in-memory storage.
+
+### Running the Application
+
+#### Using Makefile (Recommended)
 ```bash
-# Development
-go run .
-
-# Build dan run
-go build -o kasir-api
-./kasir-api
-
-# Dengan environment variables
-SERVER_HOST=0.0.0.0 SERVER_PORT=:9000 go run .
-```
-
-#### Menggunakan Makefile
-```bash
-# Lihat semua perintah
+# View all commands
 make help
 
-# Build aplikasi
+# Build application
 make build
 
-# Run aplikasi
+# Run application
 make run
+
+# Run with PostgreSQL (set env vars first)
+export APP_DATABASE_HOST=your-db-host.supabase.co
+export APP_DATABASE_USER=postgres
+export APP_DATABASE_PASSWORD=your-password
+export APP_DATABASE_DBNAME=postgres
+make run
+
+# Run database migrations
+make migrate
 
 # Run tests
 make test
 
-# Run tests dengan coverage
+# Run tests with coverage
 make coverage
 
-# Development dengan hot reload (requires air)
+# Code quality check
+make audit
+
+# Development with hot reload (requires air)
 make dev
 
 # Clean build artifacts
 make clean
+```
+
+#### Using Go
+```bash
+# Development (in-memory)
+go run ./cmd/api/
+
+# Build and run
+go build -o bin/api ./cmd/api/
+./bin/api
+
+# Run migrations
+./bin/api migrate
+
+# With environment variables
+APP_SERVER_PORT=:9000 go run ./cmd/api/
+```
+
+### Database Setup (PostgreSQL/Supabase)
+
+1. **Create database** (if using local PostgreSQL):
+```sql
+CREATE DATABASE kasir_api;
+```
+
+2. **Configure environment variables**:
+```bash
+cp .env.example .env
+# Edit .env with your database credentials
+```
+
+3. **Run migrations**:
+```bash
+make migrate
+# or
+./bin/api migrate
 ```
 
 ### API Documentation
@@ -98,7 +193,7 @@ Interactive API documentation is available via Scalar:
 
 ```bash
 # Start the server
-go run .
+make run
 
 # Open in browser
 http://localhost:8300/docs
@@ -231,24 +326,24 @@ go tool cover -html=coverage.out
 
 ### Development
 
-#### Hot Reload dengan Air
+#### Hot Reload with Air
 
 Install air:
 ```bash
 go install github.com/air-verse/air@latest
 ```
 
-Jalankan:
+Run:
 ```bash
 make dev
-# atau
+# or
 air
 ```
 
-### Teknologi
+### Technologies
 - Go 1.25+
 - Standard library (net/http, encoding/json)
-- Testing dengan httptest
+- Testing with httptest
 
 ### License
 MIT
