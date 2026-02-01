@@ -1,10 +1,11 @@
-.PHONY: help build run test coverage dev clean docs audit migrate migrate-reset seed rls-on rls-off
+.PHONY: help build run test coverage dev clean docs audit migrate migrate-reset seed rls-on rls-off test-db
 
 help:
 	@echo "Available targets:"
 	@echo "  make build     - Build the application"
 	@echo "  make run       - Run the application"
 	@echo "  make test      - Run tests"
+	@echo "  make test-db   - Setup local test database"
 	@echo "  make coverage  - Run tests with coverage"
 	@echo "  make dev       - Run with hot reload (requires air)"
 	@echo "  make docs      - Generate OpenAPI documentation"
@@ -24,6 +25,9 @@ run:
 
 test:
 	go test -v -cover ./...
+
+test-db:
+	./database/setup_test_db.sh
 
 coverage:
 	go test -v -coverprofile=coverage.out ./...
