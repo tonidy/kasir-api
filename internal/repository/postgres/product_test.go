@@ -13,7 +13,8 @@ func setupTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 
 	// Skip if no test database configured
-	dsn := "host=localhost port=5432 user=postgres password=postgres dbname=kasir_test sslmode=disable"
+	// Use 127.0.0.1 instead of localhost to force IPv4
+	dsn := "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=kasir_test sslmode=disable"
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		t.Skip("Test database not available:", err)
