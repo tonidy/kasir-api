@@ -35,3 +35,4 @@ tmp/
 kasir-api
 kasir-api.exe
 *.log
+bin/
