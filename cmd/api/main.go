@@ -32,6 +32,11 @@ func main() {
 		return
 	}
 
+	if len(os.Args) > 1 && os.Args[1] == "seed" {
+		runSeeds()
+		return
+	}
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -149,6 +154,7 @@ func printHelp() {
 	fmt.Println("Usage:")
 	fmt.Println("  api                Run the API server")
 	fmt.Println("  api migrate        Run database migrations")
+	fmt.Println("  api seed           Seed database with sample data")
 	fmt.Println("  api help           Show this help message")
 	fmt.Println()
 	fmt.Println("Options:")
@@ -199,4 +205,42 @@ func runMigrations() {
 		log.Fatalf("Migration failed: %v", err)
 	}
 	fmt.Println("Migrations completed successfully")
+}
+
+func runSeeds() {
+	// Check for help flags
+	if len(os.Args) > 2 && (os.Args[2] == "-h" || os.Args[2] == "--help") {
+		fmt.Println("Seed database with sample data")
+		fmt.Println()
+		fmt.Println("Usage:")
+		fmt.Println("  api seed           Seed database")
+		fmt.Println()
+		fmt.Println("Required Environment Variables:")
+		fmt.Println("  APP_DATABASE_HOST      Database host")
+		fmt.Println("  APP_DATABASE_USER      Database user")
+		fmt.Println("  APP_DATABASE_PASSWORD  Database password")
+		fmt.Println("  APP_DATABASE_DBNAME    Database name")
+		return
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		log.Fatal("Database configuration is required for seeding")
+	}
+
+	db, err := database.NewPool(cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	fmt.Println("Seeding database...")
+	if err := database.RunSeeds(db.DB, "seeds"); err != nil {
+		log.Fatalf("Seeding failed: %v", err)
+	}
+	fmt.Println("Database seeded successfully")
 }
