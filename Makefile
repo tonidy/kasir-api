@@ -1,4 +1,4 @@
-.PHONY: help build run test coverage dev clean docs audit migrate seed rls-on rls-off
+.PHONY: help build run test coverage dev clean docs audit migrate migrate-reset seed rls-on rls-off
 
 help:
 	@echo "Available targets:"
@@ -10,6 +10,7 @@ help:
 	@echo "  make docs      - Generate OpenAPI documentation"
 	@echo "  make audit     - Tidy, format, vet, and run static check"
 	@echo "  make migrate   - Run database migrations"
+	@echo "  make migrate-reset - Reset all migrations (drop all tables)"
 	@echo "  make seed      - Seed database with sample data"
 	@echo "  make rls-on    - Enable Row Level Security"
 	@echo "  make rls-off   - Disable Row Level Security"
@@ -37,6 +38,9 @@ docs:
 
 migrate:
 	go run ./cmd/api migrate
+
+migrate-reset:
+	go run ./cmd/api migrate-reset
 
 seed:
 	go run ./cmd/api seed
