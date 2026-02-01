@@ -32,6 +32,11 @@ func main() {
 		return
 	}
 
+	if len(os.Args) > 1 && os.Args[1] == "migrate-reset" {
+		runMigrateReset()
+		return
+	}
+
 	if len(os.Args) > 1 && os.Args[1] == "seed" {
 		runSeeds()
 		return
@@ -159,6 +164,7 @@ func printHelp() {
 	fmt.Println("Usage:")
 	fmt.Println("  api                Run the API server")
 	fmt.Println("  api migrate        Run database migrations")
+	fmt.Println("  api migrate-reset  Reset all migrations (drop all tables)")
 	fmt.Println("  api seed           Seed database with sample data")
 	fmt.Println("  api rls [on|off]   Enable or disable Row Level Security")
 	fmt.Println("  api help           Show this help message")
@@ -211,6 +217,57 @@ func runMigrations() {
 		log.Fatalf("Migration failed: %v", err)
 	}
 	fmt.Println("Migrations completed successfully")
+}
+
+func runMigrateReset() {
+	// Check for help flags
+	if len(os.Args) > 2 && (os.Args[2] == "-h" || os.Args[2] == "--help") {
+		fmt.Println("Reset all database migrations")
+		fmt.Println()
+		fmt.Println("Usage:")
+		fmt.Println("  api migrate-reset  Reset migrations (runs all Down migrations)")
+		fmt.Println()
+		fmt.Println("Warning: This will drop all tables and data!")
+		fmt.Println()
+		fmt.Println("Required Environment Variables:")
+		fmt.Println("  APP_DATABASE_HOST      Database host")
+		fmt.Println("  APP_DATABASE_USER      Database user")
+		fmt.Println("  APP_DATABASE_PASSWORD  Database password")
+		fmt.Println("  APP_DATABASE_DBNAME    Database name")
+		return
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		log.Fatal("Database configuration is required for migrations")
+	}
+
+	db, err := database.NewPool(cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	fmt.Println("⚠️  WARNING: This will drop all tables and data!")
+	fmt.Print("Are you sure? Type 'yes' to confirm: ")
+	
+	var confirm string
+	fmt.Scanln(&confirm)
+	
+	if confirm != "yes" {
+		fmt.Println("Migration reset cancelled")
+		return
+	}
+
+	fmt.Println("Resetting database migrations...")
+	if err := database.ResetMigrations(db.DB, "migrations"); err != nil {
+		log.Fatalf("Migration reset failed: %v", err)
+	}
+	fmt.Println("Migrations reset successfully")
 }
 
 func runSeeds() {
