@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -17,3 +18,9 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE INDEX idx_products_name ON products(name);
 CREATE INDEX idx_categories_name ON categories(name);
+
+-- +goose Down
+DROP INDEX IF EXISTS idx_categories_name;
+DROP INDEX IF EXISTS idx_products_name;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS products;
