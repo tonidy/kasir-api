@@ -13,26 +13,26 @@ import (
 
 // Mock service for testing
 type mockProductService struct {
-	getByIDFunc func(ctx context.Context, id int) (*domain.ProductWithCategory, error)
-	getAllFunc  func(ctx context.Context) ([]domain.ProductWithCategory, error)
-	createFunc  func(ctx context.Context, p domain.Product) (*domain.Product, error)
-	updateFunc  func(ctx context.Context, id int, p domain.Product) (*domain.Product, error)
+	getByIDFunc func(ctx context.Context, id int) (*model.ProductWithCategory, error)
+	getAllFunc  func(ctx context.Context) ([]model.ProductWithCategory, error)
+	createFunc  func(ctx context.Context, p model.Product) (*model.Product, error)
+	updateFunc  func(ctx context.Context, id int, p model.Product) (*model.Product, error)
 	deleteFunc  func(ctx context.Context, id int) error
 }
 
-func (m *mockProductService) GetByID(ctx context.Context, id int) (*domain.ProductWithCategory, error) {
+func (m *mockProductService) GetByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
 	return m.getByIDFunc(ctx, id)
 }
 
-func (m *mockProductService) GetAll(ctx context.Context) ([]domain.ProductWithCategory, error) {
+func (m *mockProductService) GetAll(ctx context.Context) ([]model.ProductWithCategory, error) {
 	return m.getAllFunc(ctx)
 }
 
-func (m *mockProductService) Create(ctx context.Context, p domain.Product) (*domain.Product, error) {
+func (m *mockProductService) Create(ctx context.Context, p model.Product) (*model.Product, error) {
 	return m.createFunc(ctx, p)
 }
 
-func (m *mockProductService) Update(ctx context.Context, id int, p domain.Product) (*domain.Product, error) {
+func (m *mockProductService) Update(ctx context.Context, id int, p model.Product) (*model.Product, error) {
 	return m.updateFunc(ctx, id, p)
 }
 
@@ -42,10 +42,10 @@ func (m *mockProductService) Delete(ctx context.Context, id int) error {
 
 func TestProductHandler_GetAll(t *testing.T) {
 	mockSvc := &mockProductService{
-		getAllFunc: func(ctx context.Context) ([]domain.ProductWithCategory, error) {
-			return []domain.ProductWithCategory{
-				{Product: domain.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10}},
-				{Product: domain.Product{ID: 2, Name: "Product 2", Price: 2000, Stock: 20}},
+		getAllFunc: func(ctx context.Context) ([]model.ProductWithCategory, error) {
+			return []model.ProductWithCategory{
+				{Product: model.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10}},
+				{Product: model.Product{ID: 2, Name: "Product 2", Price: 2000, Stock: 20}},
 			}, nil
 		},
 	}
@@ -60,7 +60,7 @@ func TestProductHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status 200, got %d", w.Code)
 	}
 
-	var products []domain.ProductWithCategory
+	var products []model.ProductWithCategory
 	json.NewDecoder(w.Body).Decode(&products)
 	if len(products) != 2 {
 		t.Errorf("Expected 2 products, got %d", len(products))
@@ -69,9 +69,9 @@ func TestProductHandler_GetAll(t *testing.T) {
 
 func TestProductHandler_GetByID(t *testing.T) {
 	mockSvc := &mockProductService{
-		getByIDFunc: func(ctx context.Context, id int) (*domain.ProductWithCategory, error) {
-			return &domain.ProductWithCategory{
-				Product: domain.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10},
+		getByIDFunc: func(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+			return &model.ProductWithCategory{
+				Product: model.Product{ID: 1, Name: "Product 1", Price: 1000, Stock: 10},
 			}, nil
 		},
 	}
@@ -89,8 +89,8 @@ func TestProductHandler_GetByID(t *testing.T) {
 
 func TestProductHandler_GetByID_NotFound(t *testing.T) {
 	mockSvc := &mockProductService{
-		getByIDFunc: func(ctx context.Context, id int) (*domain.ProductWithCategory, error) {
-			return nil, domain.ErrNotFound
+		getByIDFunc: func(ctx context.Context, id int) (*model.ProductWithCategory, error) {
+			return nil, model.ErrNotFound
 		},
 	}
 
@@ -107,7 +107,7 @@ func TestProductHandler_GetByID_NotFound(t *testing.T) {
 
 func TestProductHandler_Create(t *testing.T) {
 	mockSvc := &mockProductService{
-		createFunc: func(ctx context.Context, p domain.Product) (*domain.Product, error) {
+		createFunc: func(ctx context.Context, p model.Product) (*model.Product, error) {
 			p.ID = 1
 			return &p, nil
 		},
@@ -141,7 +141,7 @@ func TestProductHandler_Create_InvalidJSON(t *testing.T) {
 
 func TestProductHandler_Update(t *testing.T) {
 	mockSvc := &mockProductService{
-		updateFunc: func(ctx context.Context, id int, p domain.Product) (*domain.Product, error) {
+		updateFunc: func(ctx context.Context, id int, p model.Product) (*model.Product, error) {
 			p.ID = id
 			return &p, nil
 		},

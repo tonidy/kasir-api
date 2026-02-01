@@ -19,22 +19,22 @@ func NewCategoryService(reader repository.CategoryReader, writer repository.Cate
 	}
 }
 
-func (s *CategoryService) GetByID(ctx context.Context, id int) (*domain.Category, error) {
+func (s *CategoryService) GetByID(ctx context.Context, id int) (*model.Category, error) {
 	return s.reader.FindByID(ctx, id)
 }
 
-func (s *CategoryService) GetAll(ctx context.Context) ([]domain.Category, error) {
+func (s *CategoryService) GetAll(ctx context.Context) ([]model.Category, error) {
 	return s.reader.FindAll(ctx)
 }
 
-func (s *CategoryService) Create(ctx context.Context, c domain.Category) (*domain.Category, error) {
+func (s *CategoryService) Create(ctx context.Context, c model.Category) (*model.Category, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
 	return s.writer.Create(ctx, c)
 }
 
-func (s *CategoryService) Update(ctx context.Context, id int, c domain.Category) (*domain.Category, error) {
+func (s *CategoryService) Update(ctx context.Context, id int, c model.Category) (*model.Category, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}

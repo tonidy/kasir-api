@@ -16,25 +16,25 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{db: db}
 }
 
-func (r *ProductRepository) FindByID(ctx context.Context, id int) (*domain.ProductWithCategory, error) {
+func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
 	query := `
 		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.name as category_name
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE p.id = $1`
 
-	var p domain.ProductWithCategory
+	var p model.ProductWithCategory
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, domain.ErrNotFound
+			return nil, model.ErrNotFound
 		}
 		return nil, err
 	}
 	return &p, nil
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context) ([]domain.ProductWithCategory, error) {
+func (r *ProductRepository) FindAll(ctx context.Context) ([]model.ProductWithCategory, error) {
 	query := `
 		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.name as category_name
 		FROM products p
@@ -47,9 +47,9 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]domain.ProductWithCa
 	}
 	defer rows.Close()
 
-	var products []domain.ProductWithCategory
+	var products []model.ProductWithCategory
 	for rows.Next() {
-		var p domain.ProductWithCategory
+		var p model.ProductWithCategory
 		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &p.CategoryName); err != nil {
 			return nil, err
 		}
@@ -63,7 +63,7 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]domain.ProductWithCa
 	return products, nil
 }
 
-func (r *ProductRepository) Create(ctx context.Context, p domain.Product) (*domain.Product, error) {
+func (r *ProductRepository) Create(ctx context.Context, p model.Product) (*model.Product, error) {
 	query := `INSERT INTO products (name, price, stock, category_id) VALUES ($1, $2, $3, $4) RETURNING id`
 
 	err := r.db.QueryRowContext(ctx, query, p.Name, p.Price, p.Stock, p.CategoryID).Scan(&p.ID)
@@ -73,7 +73,7 @@ func (r *ProductRepository) Create(ctx context.Context, p domain.Product) (*doma
 	return &p, nil
 }
 
-func (r *ProductRepository) Update(ctx context.Context, id int, p domain.Product) (*domain.Product, error) {
+func (r *ProductRepository) Update(ctx context.Context, id int, p model.Product) (*model.Product, error) {
 	query := `UPDATE products SET name = $1, price = $2, stock = $3, category_id = $4 WHERE id = $5`
 
 	result, err := r.db.ExecContext(ctx, query, p.Name, p.Price, p.Stock, p.CategoryID, id)
@@ -87,7 +87,7 @@ func (r *ProductRepository) Update(ctx context.Context, id int, p domain.Product
 	}
 
 	if rows == 0 {
-		return nil, domain.ErrNotFound
+		return nil, model.ErrNotFound
 	}
 
 	p.ID = id
@@ -108,7 +108,7 @@ func (r *ProductRepository) Delete(ctx context.Context, id int) error {
 	}
 
 	if rows == 0 {
-		return domain.ErrNotFound
+		return model.ErrNotFound
 	}
 
 	return nil

@@ -9,18 +9,18 @@ import (
 
 type CategoryRepository struct {
 	mu     sync.RWMutex
-	data   []domain.Category
+	data   []model.Category
 	nextID int
 }
 
 func NewCategoryRepository() *CategoryRepository {
 	return &CategoryRepository{
-		data:   make([]domain.Category, 0),
+		data:   make([]model.Category, 0),
 		nextID: 1,
 	}
 }
 
-func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*domain.Category, error) {
+func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*model.Category, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -29,17 +29,17 @@ func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*domain.Cate
 			return &c, nil
 		}
 	}
-	return nil, domain.ErrNotFound
+	return nil, model.ErrNotFound
 }
 
-func (r *CategoryRepository) FindAll(ctx context.Context) ([]domain.Category, error) {
+func (r *CategoryRepository) FindAll(ctx context.Context) ([]model.Category, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	return r.data, nil
 }
 
-func (r *CategoryRepository) Create(ctx context.Context, c domain.Category) (*domain.Category, error) {
+func (r *CategoryRepository) Create(ctx context.Context, c model.Category) (*model.Category, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -49,7 +49,7 @@ func (r *CategoryRepository) Create(ctx context.Context, c domain.Category) (*do
 	return &c, nil
 }
 
-func (r *CategoryRepository) Update(ctx context.Context, id int, c domain.Category) (*domain.Category, error) {
+func (r *CategoryRepository) Update(ctx context.Context, id int, c model.Category) (*model.Category, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -60,7 +60,7 @@ func (r *CategoryRepository) Update(ctx context.Context, id int, c domain.Catego
 			return &c, nil
 		}
 	}
-	return nil, domain.ErrNotFound
+	return nil, model.ErrNotFound
 }
 
 func (r *CategoryRepository) Delete(ctx context.Context, id int) error {
@@ -73,5 +73,5 @@ func (r *CategoryRepository) Delete(ctx context.Context, id int) error {
 			return nil
 		}
 	}
-	return domain.ErrNotFound
+	return model.ErrNotFound
 }

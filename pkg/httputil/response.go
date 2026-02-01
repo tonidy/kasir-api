@@ -38,13 +38,13 @@ func ParseID(r *http.Request) (int, error) {
 }
 
 func ErrorStatus(err error) int {
-	if errors.Is(err, domain.ErrNotFound) {
+	if errors.Is(err, model.ErrNotFound) {
 		return http.StatusNotFound
 	}
-	if errors.Is(err, domain.ErrValidation) {
+	if errors.Is(err, model.ErrValidation) {
 		return http.StatusBadRequest
 	}
-	if errors.Is(err, domain.ErrConflict) {
+	if errors.Is(err, model.ErrConflict) {
 		return http.StatusConflict
 	}
 	return http.StatusInternalServerError

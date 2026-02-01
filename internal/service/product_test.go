@@ -13,7 +13,7 @@ func TestProductService_Create(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{
+	product := model.Product{
 		Name:  "Indomie",
 		Price: 3500,
 		Stock: 100,
@@ -34,7 +34,7 @@ func TestProductService_Create_ValidationError(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{
+	product := model.Product{
 		Name:  "", // Invalid: empty name
 		Price: 3500,
 		Stock: 100,
@@ -51,7 +51,7 @@ func TestProductService_GetByID(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{Name: "Indomie", Price: 3500, Stock: 100}
+	product := model.Product{Name: "Indomie", Price: 3500, Stock: 100}
 	created, _ := svc.Create(ctx, product)
 
 	found, err := svc.GetByID(ctx, created.ID)
@@ -70,8 +70,8 @@ func TestProductService_GetByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := svc.GetByID(ctx, 999)
-	if err != domain.ErrNotFound {
-		t.Errorf("GetByID() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("GetByID() error = %v, want %v", err, model.ErrNotFound)
 	}
 }
 
@@ -80,8 +80,8 @@ func TestProductService_GetAll(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	svc.Create(ctx, domain.Product{Name: "Product 1", Price: 1000, Stock: 10})
-	svc.Create(ctx, domain.Product{Name: "Product 2", Price: 2000, Stock: 20})
+	svc.Create(ctx, model.Product{Name: "Product 1", Price: 1000, Stock: 10})
+	svc.Create(ctx, model.Product{Name: "Product 2", Price: 2000, Stock: 20})
 
 	products, err := svc.GetAll(ctx)
 	if err != nil {
@@ -98,10 +98,10 @@ func TestProductService_Update(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{Name: "Indomie", Price: 3500, Stock: 100}
+	product := model.Product{Name: "Indomie", Price: 3500, Stock: 100}
 	created, _ := svc.Create(ctx, product)
 
-	updated := domain.Product{Name: "Indomie Goreng", Price: 4000, Stock: 150}
+	updated := model.Product{Name: "Indomie Goreng", Price: 4000, Stock: 150}
 	result, err := svc.Update(ctx, created.ID, updated)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
@@ -117,10 +117,10 @@ func TestProductService_Update_ValidationError(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{Name: "Indomie", Price: 3500, Stock: 100}
+	product := model.Product{Name: "Indomie", Price: 3500, Stock: 100}
 	created, _ := svc.Create(ctx, product)
 
-	updated := domain.Product{Name: "", Price: 4000, Stock: 150} // Invalid
+	updated := model.Product{Name: "", Price: 4000, Stock: 150} // Invalid
 	_, err := svc.Update(ctx, created.ID, updated)
 	if err == nil {
 		t.Error("Update() should return validation error for empty name")
@@ -132,7 +132,7 @@ func TestProductService_Delete(t *testing.T) {
 	svc := NewProductService(repo, repo)
 	ctx := context.Background()
 
-	product := domain.Product{Name: "Indomie", Price: 3500, Stock: 100}
+	product := model.Product{Name: "Indomie", Price: 3500, Stock: 100}
 	created, _ := svc.Create(ctx, product)
 
 	err := svc.Delete(ctx, created.ID)
@@ -141,7 +141,7 @@ func TestProductService_Delete(t *testing.T) {
 	}
 
 	_, err = svc.GetByID(ctx, created.ID)
-	if err != domain.ErrNotFound {
-		t.Errorf("After delete, GetByID() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("After delete, GetByID() error = %v, want %v", err, model.ErrNotFound)
 	}
 }
