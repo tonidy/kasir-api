@@ -33,7 +33,7 @@ docs:
 	~/tools/go/bin/swag init --v3.1 --outputTypes yaml,json
 
 migrate:
-	./bin/kasir-api migrate
+	go run ./cmd/api migrate
 
 audit:
 	@echo 'Tidying and verifying module dependencies...'

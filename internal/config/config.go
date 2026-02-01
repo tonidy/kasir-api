@@ -2,10 +2,13 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/knadh/koanf/parsers/dotenv"
 	"github.com/knadh/koanf/providers/env/v2"
+	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 )
 
@@ -35,7 +38,15 @@ type DatabaseConfig struct {
 func Load() (*Config, error) {
 	k := koanf.New(".")
 
-	if err := k.Load(env.Provider(".", env.Opt{
+	// Load from .env file if it exists
+	if _, err := os.Stat(".env"); err == nil {
+		if err := k.Load(file.Provider(".env"), dotenv.Parser()); err != nil {
+			return nil, fmt.Errorf("failed to load .env file: %w", err)
+		}
+	}
+
+	// Load from environment variables (overrides .env)
+	if err := k.Load(env.Provider("", env.Opt{
 		Prefix: "APP_",
 		TransformFunc: func(key, value string) (string, any) {
 			key = strings.ToLower(strings.TrimPrefix(key, "APP_"))
