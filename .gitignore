@@ -33,6 +33,7 @@ go.work.sum
 tmp/
 
 kasir-api
+kasir-api-*
 kasir-api.exe
 *.log
 bin/
