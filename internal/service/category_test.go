@@ -13,7 +13,7 @@ func TestCategoryService_Create(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	category := domain.Category{
+	category := model.Category{
 		Name:        "Food",
 		Description: "Food items",
 	}
@@ -33,7 +33,7 @@ func TestCategoryService_Create_ValidationError(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	category := domain.Category{
+	category := model.Category{
 		Name:        "", // Invalid: empty name
 		Description: "Food items",
 	}
@@ -49,7 +49,7 @@ func TestCategoryService_GetByID(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := svc.Create(ctx, category)
 
 	found, err := svc.GetByID(ctx, created.ID)
@@ -67,8 +67,8 @@ func TestCategoryService_GetAll(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	svc.Create(ctx, domain.Category{Name: "Food", Description: "Food items"})
-	svc.Create(ctx, domain.Category{Name: "Beverage", Description: "Drinks"})
+	svc.Create(ctx, model.Category{Name: "Food", Description: "Food items"})
+	svc.Create(ctx, model.Category{Name: "Beverage", Description: "Drinks"})
 
 	categories, err := svc.GetAll(ctx)
 	if err != nil {
@@ -85,10 +85,10 @@ func TestCategoryService_Update(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := svc.Create(ctx, category)
 
-	updated := domain.Category{Name: "Food & Beverage", Description: "Food and drinks"}
+	updated := model.Category{Name: "Food & Beverage", Description: "Food and drinks"}
 	result, err := svc.Update(ctx, created.ID, updated)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
@@ -104,7 +104,7 @@ func TestCategoryService_Delete(t *testing.T) {
 	svc := NewCategoryService(repo, repo)
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := svc.Create(ctx, category)
 
 	err := svc.Delete(ctx, created.ID)
@@ -113,7 +113,7 @@ func TestCategoryService_Delete(t *testing.T) {
 	}
 
 	_, err = svc.GetByID(ctx, created.ID)
-	if err != domain.ErrNotFound {
-		t.Errorf("After delete, GetByID() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("After delete, GetByID() error = %v, want %v", err, model.ErrNotFound)
 	}
 }

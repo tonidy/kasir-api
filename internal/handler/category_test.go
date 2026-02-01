@@ -13,26 +13,26 @@ import (
 
 // Mock service for testing
 type mockCategoryService struct {
-	getByIDFunc func(ctx context.Context, id int) (*domain.Category, error)
-	getAllFunc  func(ctx context.Context) ([]domain.Category, error)
-	createFunc  func(ctx context.Context, c domain.Category) (*domain.Category, error)
-	updateFunc  func(ctx context.Context, id int, c domain.Category) (*domain.Category, error)
+	getByIDFunc func(ctx context.Context, id int) (*model.Category, error)
+	getAllFunc  func(ctx context.Context) ([]model.Category, error)
+	createFunc  func(ctx context.Context, c model.Category) (*model.Category, error)
+	updateFunc  func(ctx context.Context, id int, c model.Category) (*model.Category, error)
 	deleteFunc  func(ctx context.Context, id int) error
 }
 
-func (m *mockCategoryService) GetByID(ctx context.Context, id int) (*domain.Category, error) {
+func (m *mockCategoryService) GetByID(ctx context.Context, id int) (*model.Category, error) {
 	return m.getByIDFunc(ctx, id)
 }
 
-func (m *mockCategoryService) GetAll(ctx context.Context) ([]domain.Category, error) {
+func (m *mockCategoryService) GetAll(ctx context.Context) ([]model.Category, error) {
 	return m.getAllFunc(ctx)
 }
 
-func (m *mockCategoryService) Create(ctx context.Context, c domain.Category) (*domain.Category, error) {
+func (m *mockCategoryService) Create(ctx context.Context, c model.Category) (*model.Category, error) {
 	return m.createFunc(ctx, c)
 }
 
-func (m *mockCategoryService) Update(ctx context.Context, id int, c domain.Category) (*domain.Category, error) {
+func (m *mockCategoryService) Update(ctx context.Context, id int, c model.Category) (*model.Category, error) {
 	return m.updateFunc(ctx, id, c)
 }
 
@@ -42,8 +42,8 @@ func (m *mockCategoryService) Delete(ctx context.Context, id int) error {
 
 func TestCategoryHandler_GetAll(t *testing.T) {
 	mockSvc := &mockCategoryService{
-		getAllFunc: func(ctx context.Context) ([]domain.Category, error) {
-			return []domain.Category{
+		getAllFunc: func(ctx context.Context) ([]model.Category, error) {
+			return []model.Category{
 				{ID: 1, Name: "Food", Description: "Food items"},
 				{ID: 2, Name: "Beverage", Description: "Drinks"},
 			}, nil
@@ -60,7 +60,7 @@ func TestCategoryHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status 200, got %d", w.Code)
 	}
 
-	var categories []domain.Category
+	var categories []model.Category
 	json.NewDecoder(w.Body).Decode(&categories)
 	if len(categories) != 2 {
 		t.Errorf("Expected 2 categories, got %d", len(categories))
@@ -69,8 +69,8 @@ func TestCategoryHandler_GetAll(t *testing.T) {
 
 func TestCategoryHandler_GetByID(t *testing.T) {
 	mockSvc := &mockCategoryService{
-		getByIDFunc: func(ctx context.Context, id int) (*domain.Category, error) {
-			return &domain.Category{ID: 1, Name: "Food", Description: "Food items"}, nil
+		getByIDFunc: func(ctx context.Context, id int) (*model.Category, error) {
+			return &model.Category{ID: 1, Name: "Food", Description: "Food items"}, nil
 		},
 	}
 
@@ -87,8 +87,8 @@ func TestCategoryHandler_GetByID(t *testing.T) {
 
 func TestCategoryHandler_GetByID_NotFound(t *testing.T) {
 	mockSvc := &mockCategoryService{
-		getByIDFunc: func(ctx context.Context, id int) (*domain.Category, error) {
-			return nil, domain.ErrNotFound
+		getByIDFunc: func(ctx context.Context, id int) (*model.Category, error) {
+			return nil, model.ErrNotFound
 		},
 	}
 
@@ -105,7 +105,7 @@ func TestCategoryHandler_GetByID_NotFound(t *testing.T) {
 
 func TestCategoryHandler_Create(t *testing.T) {
 	mockSvc := &mockCategoryService{
-		createFunc: func(ctx context.Context, c domain.Category) (*domain.Category, error) {
+		createFunc: func(ctx context.Context, c model.Category) (*model.Category, error) {
 			c.ID = 1
 			return &c, nil
 		},
@@ -139,7 +139,7 @@ func TestCategoryHandler_Create_InvalidJSON(t *testing.T) {
 
 func TestCategoryHandler_Update(t *testing.T) {
 	mockSvc := &mockCategoryService{
-		updateFunc: func(ctx context.Context, id int, c domain.Category) (*domain.Category, error) {
+		updateFunc: func(ctx context.Context, id int, c model.Category) (*model.Category, error) {
 			c.ID = id
 			return &c, nil
 		},

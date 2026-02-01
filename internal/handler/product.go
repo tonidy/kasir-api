@@ -11,10 +11,10 @@ import (
 )
 
 type ProductService interface {
-	GetByID(ctx context.Context, id int) (*domain.ProductWithCategory, error)
-	GetAll(ctx context.Context) ([]domain.ProductWithCategory, error)
-	Create(ctx context.Context, p domain.Product) (*domain.Product, error)
-	Update(ctx context.Context, id int, p domain.Product) (*domain.Product, error)
+	GetByID(ctx context.Context, id int) (*model.ProductWithCategory, error)
+	GetAll(ctx context.Context) ([]model.ProductWithCategory, error)
+	Create(ctx context.Context, p model.Product) (*model.Product, error)
+	Update(ctx context.Context, id int, p model.Product) (*model.Product, error)
 	Delete(ctx context.Context, id int) error
 }
 
@@ -74,7 +74,7 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var product domain.Product
+	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -95,7 +95,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var product domain.Product
+	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return

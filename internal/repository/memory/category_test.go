@@ -11,7 +11,7 @@ func TestCategoryRepository_Create(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	category := domain.Category{
+	category := model.Category{
 		Name:        "Food",
 		Description: "Food items",
 	}
@@ -33,7 +33,7 @@ func TestCategoryRepository_FindByID(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := repo.Create(ctx, category)
 
 	found, err := repo.FindByID(ctx, created.ID)
@@ -51,8 +51,8 @@ func TestCategoryRepository_FindByID_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := repo.FindByID(ctx, 999)
-	if err != domain.ErrNotFound {
-		t.Errorf("FindByID() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("FindByID() error = %v, want %v", err, model.ErrNotFound)
 	}
 }
 
@@ -60,8 +60,8 @@ func TestCategoryRepository_FindAll(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	repo.Create(ctx, domain.Category{Name: "Food", Description: "Food items"})
-	repo.Create(ctx, domain.Category{Name: "Beverage", Description: "Drinks"})
+	repo.Create(ctx, model.Category{Name: "Food", Description: "Food items"})
+	repo.Create(ctx, model.Category{Name: "Beverage", Description: "Drinks"})
 
 	categories, err := repo.FindAll(ctx)
 	if err != nil {
@@ -77,10 +77,10 @@ func TestCategoryRepository_Update(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := repo.Create(ctx, category)
 
-	updated := domain.Category{Name: "Food & Beverage", Description: "Food and drinks"}
+	updated := model.Category{Name: "Food & Beverage", Description: "Food and drinks"}
 	result, err := repo.Update(ctx, created.ID, updated)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
@@ -95,9 +95,9 @@ func TestCategoryRepository_Update_NotFound(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	_, err := repo.Update(ctx, 999, domain.Category{Name: "Test", Description: "Test"})
-	if err != domain.ErrNotFound {
-		t.Errorf("Update() error = %v, want %v", err, domain.ErrNotFound)
+	_, err := repo.Update(ctx, 999, model.Category{Name: "Test", Description: "Test"})
+	if err != model.ErrNotFound {
+		t.Errorf("Update() error = %v, want %v", err, model.ErrNotFound)
 	}
 }
 
@@ -105,7 +105,7 @@ func TestCategoryRepository_Delete(t *testing.T) {
 	repo := NewCategoryRepository()
 	ctx := context.Background()
 
-	category := domain.Category{Name: "Food", Description: "Food items"}
+	category := model.Category{Name: "Food", Description: "Food items"}
 	created, _ := repo.Create(ctx, category)
 
 	err := repo.Delete(ctx, created.ID)
@@ -114,8 +114,8 @@ func TestCategoryRepository_Delete(t *testing.T) {
 	}
 
 	_, err = repo.FindByID(ctx, created.ID)
-	if err != domain.ErrNotFound {
-		t.Errorf("After delete, FindByID() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("After delete, FindByID() error = %v, want %v", err, model.ErrNotFound)
 	}
 }
 
@@ -124,7 +124,7 @@ func TestCategoryRepository_Delete_NotFound(t *testing.T) {
 	ctx := context.Background()
 
 	err := repo.Delete(ctx, 999)
-	if err != domain.ErrNotFound {
-		t.Errorf("Delete() error = %v, want %v", err, domain.ErrNotFound)
+	if err != model.ErrNotFound {
+		t.Errorf("Delete() error = %v, want %v", err, model.ErrNotFound)
 	}
 }

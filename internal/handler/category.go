@@ -10,10 +10,10 @@ import (
 )
 
 type CategoryService interface {
-	GetByID(ctx context.Context, id int) (*domain.Category, error)
-	GetAll(ctx context.Context) ([]domain.Category, error)
-	Create(ctx context.Context, c domain.Category) (*domain.Category, error)
-	Update(ctx context.Context, id int, c domain.Category) (*domain.Category, error)
+	GetByID(ctx context.Context, id int) (*model.Category, error)
+	GetAll(ctx context.Context) ([]model.Category, error)
+	Create(ctx context.Context, c model.Category) (*model.Category, error)
+	Update(ctx context.Context, id int, c model.Category) (*model.Category, error)
 	Delete(ctx context.Context, id int) error
 }
 
@@ -50,7 +50,7 @@ func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var category domain.Category
+	var category model.Category
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return
@@ -71,7 +71,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var category domain.Category
+	var category model.Category
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
 		return

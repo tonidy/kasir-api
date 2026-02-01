@@ -9,14 +9,14 @@ import (
 
 type ProductRepository struct {
 	mu      sync.RWMutex
-	data    []domain.Product
+	data    []model.Product
 	nextID  int
 	catRepo *CategoryRepository
 }
 
 func NewProductRepository() *ProductRepository {
 	return &ProductRepository{
-		data:   make([]domain.Product, 0),
+		data:   make([]model.Product, 0),
 		nextID: 1,
 	}
 }
@@ -25,13 +25,13 @@ func (r *ProductRepository) SetCategoryRepo(catRepo *CategoryRepository) {
 	r.catRepo = catRepo
 }
 
-func (r *ProductRepository) FindByID(ctx context.Context, id int) (*domain.ProductWithCategory, error) {
+func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.ProductWithCategory, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	for _, p := range r.data {
 		if p.ID == id {
-			result := domain.ProductWithCategory{
+			result := model.ProductWithCategory{
 				Product: p,
 			}
 
@@ -45,16 +45,16 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*domain.Produ
 			return &result, nil
 		}
 	}
-	return nil, domain.ErrNotFound
+	return nil, model.ErrNotFound
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context) ([]domain.ProductWithCategory, error) {
+func (r *ProductRepository) FindAll(ctx context.Context) ([]model.ProductWithCategory, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	results := make([]domain.ProductWithCategory, 0, len(r.data))
+	results := make([]model.ProductWithCategory, 0, len(r.data))
 	for _, p := range r.data {
-		result := domain.ProductWithCategory{
+		result := model.ProductWithCategory{
 			Product: p,
 		}
 
@@ -71,7 +71,7 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]domain.ProductWithCa
 	return results, nil
 }
 
-func (r *ProductRepository) Create(ctx context.Context, p domain.Product) (*domain.Product, error) {
+func (r *ProductRepository) Create(ctx context.Context, p model.Product) (*model.Product, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -81,7 +81,7 @@ func (r *ProductRepository) Create(ctx context.Context, p domain.Product) (*doma
 	return &p, nil
 }
 
-func (r *ProductRepository) Update(ctx context.Context, id int, p domain.Product) (*domain.Product, error) {
+func (r *ProductRepository) Update(ctx context.Context, id int, p model.Product) (*model.Product, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -92,7 +92,7 @@ func (r *ProductRepository) Update(ctx context.Context, id int, p domain.Product
 			return &p, nil
 		}
 	}
-	return nil, domain.ErrNotFound
+	return nil, model.ErrNotFound
 }
 
 func (r *ProductRepository) Delete(ctx context.Context, id int) error {
@@ -105,5 +105,5 @@ func (r *ProductRepository) Delete(ctx context.Context, id int) error {
 			return nil
 		}
 	}
-	return domain.ErrNotFound
+	return model.ErrNotFound
 }
