@@ -213,7 +213,7 @@ func runMigrations() {
 	defer db.Close()
 
 	fmt.Println("Running database migrations...")
-	if err := database.RunMigrations(db.DB, "migrations"); err != nil {
+	if err := database.RunMigrations(db.DB, "database/migrations"); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
 	fmt.Println("Migrations completed successfully")
@@ -264,7 +264,7 @@ func runMigrateReset() {
 	}
 
 	fmt.Println("Resetting database migrations...")
-	if err := database.ResetMigrations(db.DB, "migrations"); err != nil {
+	if err := database.ResetMigrations(db.DB, "database/migrations"); err != nil {
 		log.Fatalf("Migration reset failed: %v", err)
 	}
 	fmt.Println("Migrations reset successfully")
@@ -302,7 +302,7 @@ func runSeeds() {
 	defer db.Close()
 
 	fmt.Println("Seeding database...")
-	if err := database.RunSeeds(db.DB, "seeds"); err != nil {
+	if err := database.RunSeeds(db.DB, "database/seeds"); err != nil {
 		log.Fatalf("Seeding failed: %v", err)
 	}
 	fmt.Println("Database seeded successfully")
@@ -351,13 +351,13 @@ func runRLS() {
 
 	if action == "on" {
 		fmt.Println("Enabling Row Level Security...")
-		if err := database.EnableRLS(db.DB, "rls"); err != nil {
+		if err := database.EnableRLS(db.DB, "database/rls"); err != nil {
 			log.Fatalf("Failed to enable RLS: %v", err)
 		}
 		fmt.Println("RLS enabled successfully")
 	} else {
 		fmt.Println("Disabling Row Level Security...")
-		if err := database.DisableRLS(db.DB, "rls"); err != nil {
+		if err := database.DisableRLS(db.DB, "database/rls"); err != nil {
 			log.Fatalf("Failed to disable RLS: %v", err)
 		}
 		fmt.Println("RLS disabled successfully")
