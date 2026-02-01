@@ -2,10 +2,17 @@
 
 This document tracks the evolution of the application's binary size and dependencies over time.
 
+## Size Comparison Table
+
+| Phase | Date       | Binary Size | Change       | Dependencies | Key Features                   |
+| ----- | ---------- | ----------- | ------------ | ------------ | ------------------------------ |
+| 1     | Initial    | 7.9M        | -            | 0            | In-memory, stdlib only         |
+| 2     | 2026-02-01 | 15M         | +7.1M (+90%) | 23           | PostgreSQL, migrations, config |
+
 ## Timeline
 
 ### Phase 1: Initial Implementation (Commit: initial)
-**Date:** Early development  
+**Date:** 2025-01-25 
 **Branch:** main
 
 **Binary Size:** 7.9M
@@ -69,140 +76,53 @@ require (
 - ✅ SOLID principles
 - ✅ Comprehensive test coverage
 
-**Architecture:**
-```
-internal/
-├── config/      # Configuration management
-├── database/    # DB connection & migrations
-├── model/       # Domain entities
-├── repository/  # Data access (memory + postgres)
-├── service/     # Business logic
-└── handler/     # HTTP handlers
-```
-
----
-
-## Size Comparison Table
-
-| Phase | Date | Binary Size | Change | Dependencies | Key Features |
-|-------|------|-------------|--------|--------------|--------------|
-| 1 | Initial | 7.9M | - | 0 | In-memory, stdlib only |
-| 2 | 2026-02-01 | 15M | +7.1M (+90%) | 23 | PostgreSQL, migrations, config |
-
 ---
 
 ## Optimization Options
 
 If binary size becomes a concern, consider:
 
-### 1. Build with Compression
+### 1. Build with Stripped Symbols
 ```bash
-# Strip debug symbols
+# Strip debug symbols and symbol table
+go build -ldflags="-s -w" -o bin/kasir-api ./cmd/api/
+```
+**Expected size:** ~10M (33% reduction from 15M)
+
+**What it does:**
+- `-s`: Omit symbol table and debug info
+- `-w`: Omit DWARF symbol table
+
+**Verified on macOS:** 15M → 10M
+
+### 2. Compress with UPX (Linux/Windows only)
+```bash
+# Build first
 go build -ldflags="-s -w" -o bin/kasir-api ./cmd/api/
 
-# Compress with UPX
+# Compress (Linux/Windows)
 upx --best --lzma bin/kasir-api
 ```
 **Expected size:** ~5-6M (60% reduction)
 
-### 2. Alternative Dependencies
+**Note:** UPX doesn't work reliably on macOS. Use Docker for cross-compilation:
+```bash
+# Build for Linux
+docker run --rm -v "$PWD":/app -w /app golang:1.25 \
+  go build -ldflags="-s -w" -o bin/kasir-api-linux ./cmd/api/
+
+# Compress
+upx --best --lzma bin/kasir-api-linux
+```
+
+### 3. Alternative Dependencies
 - Replace `pgx/v5` with `lib/pq` (smaller, less features)
 - Replace `koanf` with `os.Getenv()` (no .env support)
 - Replace `goose` with custom migration runner
 
-### 3. Build Tags
+### 4. Build for Specific Platform
 ```bash
-# Build without PostgreSQL support
-go build -tags=nomemory -o bin/kasir-api ./cmd/api/
+# Build for Linux (smaller than macOS)
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/kasir-api ./cmd/api/
 ```
 
----
-
-## Analysis
-
-### Why Size Increases?
-
-1. **Database Drivers** - Full-featured drivers include:
-   - Protocol implementations
-   - Type conversions
-   - Connection pooling
-   - Error handling
-
-2. **Configuration Libraries** - Include:
-   - Multiple parsers (env, file, dotenv)
-   - Type conversion
-   - Validation
-
-3. **Migration Tools** - Include:
-   - SQL parsing
-   - Version tracking
-   - Rollback support
-
-### Is It Worth It?
-
-**Yes, for production applications:**
-- Maintainability > Binary size
-- Features > Minimal footprint
-- Developer experience > Deployment size
-
-**No, if:**
-- Embedded systems (size-constrained)
-- Edge computing (bandwidth-limited)
-- Simple prototypes
-- Learning projects
-
----
-
-## Future Considerations
-
-As the application grows, monitor:
-- Binary size per major feature
-- Dependency count
-- Build time
-- Deployment size
-
-**Target thresholds:**
-- ⚠️ Binary > 50M: Review dependencies
-- ⚠️ Dependencies > 50: Consider consolidation
-- ⚠️ Build time > 1min: Optimize build process
-
----
-
-## How to Update This Document
-
-When adding new dependencies:
-
-1. **Build and measure:**
-   ```bash
-   make build
-   du -sh bin/kasir-api
-   ```
-
-2. **Count dependencies:**
-   ```bash
-   wc -l go.mod go.sum
-   ```
-
-3. **Add new phase:**
-   - Date and commit hash
-   - Binary size and change
-   - New dependencies with purpose
-   - Features added
-
-4. **Update comparison table**
-
----
-
-## Recommendations
-
-**Current Phase (Phase 2):**
-- ✅ Binary size is acceptable for production (15M)
-- ✅ Dependencies are well-justified
-- ✅ Architecture supports long-term maintenance
-- ✅ No optimization needed at this stage
-
-**Monitor for Phase 3:**
-- If adding observability (Prometheus, OpenTelemetry)
-- If adding API documentation (Swagger/OpenAPI)
-- If adding authentication (JWT, OAuth)
-- If adding caching (Redis client)
