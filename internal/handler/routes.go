@@ -9,6 +9,9 @@ func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHan
 	mux.HandleFunc("/", healthHandler.Root)
 	mux.HandleFunc("/health", healthHandler.Check)
 
+	// Documentation
+	mux.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
+
 	// Product endpoints
 	mux.HandleFunc("/api/products", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
