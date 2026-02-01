@@ -1,4 +1,4 @@
-.PHONY: help build run test coverage dev clean docs audit migrate seed
+.PHONY: help build run test coverage dev clean docs audit migrate seed rls-on rls-off
 
 help:
 	@echo "Available targets:"
@@ -11,6 +11,8 @@ help:
 	@echo "  make audit     - Tidy, format, vet, and run static check"
 	@echo "  make migrate   - Run database migrations"
 	@echo "  make seed      - Seed database with sample data"
+	@echo "  make rls-on    - Enable Row Level Security"
+	@echo "  make rls-off   - Disable Row Level Security"
 	@echo "  make clean     - Clean build artifacts"
 
 build:
@@ -38,6 +40,12 @@ migrate:
 
 seed:
 	go run ./cmd/api seed
+
+rls-on:
+	go run ./cmd/api rls on
+
+rls-off:
+	go run ./cmd/api rls off
 
 audit:
 	@echo 'Tidying and verifying module dependencies...'

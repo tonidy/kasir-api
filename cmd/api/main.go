@@ -37,6 +37,11 @@ func main() {
 		return
 	}
 
+	if len(os.Args) > 1 && os.Args[1] == "rls" {
+		runRLS()
+		return
+	}
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -155,6 +160,7 @@ func printHelp() {
 	fmt.Println("  api                Run the API server")
 	fmt.Println("  api migrate        Run database migrations")
 	fmt.Println("  api seed           Seed database with sample data")
+	fmt.Println("  api rls [on|off]   Enable or disable Row Level Security")
 	fmt.Println("  api help           Show this help message")
 	fmt.Println()
 	fmt.Println("Options:")
@@ -243,4 +249,60 @@ func runSeeds() {
 		log.Fatalf("Seeding failed: %v", err)
 	}
 	fmt.Println("Database seeded successfully")
+}
+
+func runRLS() {
+	// Check for help flags
+	if len(os.Args) > 2 && (os.Args[2] == "-h" || os.Args[2] == "--help") {
+		fmt.Println("Enable or disable Row Level Security")
+		fmt.Println()
+		fmt.Println("Usage:")
+		fmt.Println("  api rls on         Enable RLS")
+		fmt.Println("  api rls off        Disable RLS")
+		fmt.Println()
+		fmt.Println("Required Environment Variables:")
+		fmt.Println("  APP_DATABASE_HOST      Database host")
+		fmt.Println("  APP_DATABASE_USER      Database user")
+		fmt.Println("  APP_DATABASE_PASSWORD  Database password")
+		fmt.Println("  APP_DATABASE_DBNAME    Database name")
+		return
+	}
+
+	if len(os.Args) < 3 {
+		log.Fatal("Usage: api rls [on|off]")
+	}
+
+	action := os.Args[2]
+	if action != "on" && action != "off" {
+		log.Fatal("Usage: api rls [on|off]")
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		log.Fatal("Database configuration is required for RLS management")
+	}
+
+	db, err := database.NewPool(cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	if action == "on" {
+		fmt.Println("Enabling Row Level Security...")
+		if err := database.EnableRLS(db.DB, "rls"); err != nil {
+			log.Fatalf("Failed to enable RLS: %v", err)
+		}
+		fmt.Println("RLS enabled successfully")
+	} else {
+		fmt.Println("Disabling Row Level Security...")
+		if err := database.DisableRLS(db.DB, "rls"); err != nil {
+			log.Fatalf("Failed to disable RLS: %v", err)
+		}
+		fmt.Println("RLS disabled successfully")
+	}
 }
