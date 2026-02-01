@@ -1,4 +1,4 @@
-.PHONY: help build run test coverage dev clean docs audit migrate
+.PHONY: help build run test coverage dev clean docs audit migrate seed
 
 help:
 	@echo "Available targets:"
@@ -10,6 +10,7 @@ help:
 	@echo "  make docs      - Generate OpenAPI documentation"
 	@echo "  make audit     - Tidy, format, vet, and run static check"
 	@echo "  make migrate   - Run database migrations"
+	@echo "  make seed      - Seed database with sample data"
 	@echo "  make clean     - Clean build artifacts"
 
 build:
@@ -34,6 +35,9 @@ docs:
 
 migrate:
 	go run ./cmd/api migrate
+
+seed:
+	go run ./cmd/api seed
 
 audit:
 	@echo 'Tidying and verifying module dependencies...'
