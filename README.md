@@ -60,8 +60,14 @@ internal/
 pkg/
 └── httputil/                # HTTP utilities
     └── response.go
-migrations/
-└── 001_init.sql             # Database migrations
+database/
+├── migrations/              # Database migrations (goose)
+│   └── *.sql
+├── seeds/                   # Seed data
+│   └── seed.sql
+└── rls/                     # Row Level Security policies
+    ├── enable_rls.sql
+    └── disable_rls.sql
 ```
 
 ### SOLID Principles Applied
