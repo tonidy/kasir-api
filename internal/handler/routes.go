@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, transactionHandler *TransactionHandler, healthHandler *HealthHandler) {
+func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, transactionHandler *TransactionHandler, reportHandler *ReportHandler, healthHandler *HealthHandler) {
 	// Health endpoints
 	mux.HandleFunc("/", healthHandler.Root)
 	mux.HandleFunc("/health", healthHandler.Check)
@@ -66,6 +66,23 @@ func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHan
 	mux.HandleFunc("/api/transactions/checkout", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			transactionHandler.Checkout(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Report endpoints
+	mux.HandleFunc("/api/reports/today", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			reportHandler.Today(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/reports", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			reportHandler.ByDateRange(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}

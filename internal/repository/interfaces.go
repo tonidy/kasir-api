@@ -36,3 +36,9 @@ type CategoryWriter interface {
 type TransactionWriter interface {
 	CreateTransaction(ctx context.Context, items []model.CheckoutItem) (*model.Transaction, error)
 }
+
+// ReportReader defines read operations for reports
+type ReportReader interface {
+	GetTodayReport(ctx context.Context) (*model.ReportSummary, error)
+	GetReportByDateRange(ctx context.Context, startDate, endDate string) (*model.ReportSummary, error)
+}
