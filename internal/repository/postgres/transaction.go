@@ -23,41 +23,79 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 	}
 	defer tx.Rollback()
 
+	// Batch fetch products with FOR UPDATE to lock rows
+	productIDs := make([]interface{}, len(items))
+	itemMap := make(map[int]int) // product_id -> quantity
+	for i, item := range items {
+		productIDs[i] = item.ProductID
+		itemMap[item.ProductID] = item.Quantity
+	}
+
+	placeholders := ""
+	for i := range productIDs {
+		if i > 0 {
+			placeholders += ", "
+		}
+		placeholders += fmt.Sprintf("$%d", i+1)
+	}
+
+	query := fmt.Sprintf("SELECT id, name, price, stock FROM products WHERE id IN (%s) FOR UPDATE", placeholders)
+	rows, err := tx.QueryContext(ctx, query, productIDs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	type productInfo struct {
+		id    int
+		name  string
+		price int
+		stock int
+	}
+	products := make(map[int]productInfo)
+	for rows.Next() {
+		var p productInfo
+		if err := rows.Scan(&p.id, &p.name, &p.price, &p.stock); err != nil {
+			return nil, err
+		}
+		products[p.id] = p
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Validate all products exist and have sufficient stock
 	totalAmount := 0
 	details := make([]model.TransactionDetail, 0, len(items))
 
 	for _, item := range items {
-		var productPrice, stock int
-		var productName string
-
-		err := tx.QueryRowContext(ctx, "SELECT name, price, stock FROM products WHERE id = $1", item.ProductID).
-			Scan(&productName, &productPrice, &stock)
-		if err == sql.ErrNoRows {
+		product, exists := products[item.ProductID]
+		if !exists {
 			return nil, fmt.Errorf("%w: product id %d not found", model.ErrNotFound, item.ProductID)
 		}
-		if err != nil {
-			return nil, err
-		}
 
-		if stock < item.Quantity {
+		if product.stock < item.Quantity {
 			return nil, fmt.Errorf("%w: insufficient stock for product %s (available: %d, requested: %d)",
-				model.ErrValidation, productName, stock, item.Quantity)
+				model.ErrValidation, product.name, product.stock, item.Quantity)
 		}
 
-		subtotal := productPrice * item.Quantity
+		subtotal := product.price * item.Quantity
 		totalAmount += subtotal
-
-		_, err = tx.ExecContext(ctx, "UPDATE products SET stock = stock - $1 WHERE id = $2", item.Quantity, item.ProductID)
-		if err != nil {
-			return nil, err
-		}
 
 		details = append(details, model.TransactionDetail{
 			ProductID:   item.ProductID,
-			ProductName: productName,
+			ProductName: product.name,
 			Quantity:    item.Quantity,
 			Subtotal:    subtotal,
 		})
+	}
+
+	// Batch update stock
+	for productID, quantity := range itemMap {
+		_, err = tx.ExecContext(ctx, "UPDATE products SET stock = stock - $1 WHERE id = $2", quantity, productID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var transactionID int
@@ -68,16 +106,38 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 		return nil, err
 	}
 
-	for i := range details {
-		details[i].TransactionID = transactionID
-		var detailID int
-		err = tx.QueryRowContext(ctx,
-			"INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES ($1, $2, $3, $4) RETURNING id",
-			transactionID, details[i].ProductID, details[i].Quantity, details[i].Subtotal).Scan(&detailID)
+	// Batch insert transaction details with RETURNING
+	if len(details) > 0 {
+		query := "INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES "
+		args := make([]interface{}, 0, len(details)*4)
+
+		for i, detail := range details {
+			if i > 0 {
+				query += ", "
+			}
+			offset := i * 4
+			query += fmt.Sprintf("($%d, $%d, $%d, $%d)", offset+1, offset+2, offset+3, offset+4)
+			args = append(args, transactionID, detail.ProductID, detail.Quantity, detail.Subtotal)
+			details[i].TransactionID = transactionID
+		}
+		query += " RETURNING id"
+
+		rows, err := tx.QueryContext(ctx, query, args...)
 		if err != nil {
 			return nil, err
 		}
-		details[i].ID = detailID
+		defer rows.Close()
+
+		i := 0
+		for rows.Next() {
+			if err := rows.Scan(&details[i].ID); err != nil {
+				return nil, err
+			}
+			i++
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
