@@ -24,7 +24,7 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 	defer tx.Rollback()
 
 	// Batch fetch products with FOR UPDATE to lock rows
-	productIDs := make([]interface{}, len(items))
+	productIDs := make([]any, len(items))
 	itemMap := make(map[int]int) // product_id -> quantity
 	for i, item := range items {
 		productIDs[i] = item.ProductID
@@ -109,7 +109,7 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 	// Batch insert transaction details with RETURNING
 	if len(details) > 0 {
 		query := "INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES "
-		args := make([]interface{}, 0, len(details)*4)
+		args := make([]any, 0, len(details)*4)
 
 		for i, detail := range details {
 			if i > 0 {

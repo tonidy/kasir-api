@@ -93,7 +93,7 @@ func (r *ProductRepository) FindByFilters(ctx context.Context, name string, acti
 		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE 1=1`
 
-	args := []interface{}{}
+	args := []any{}
 	argPos := 1
 
 	if name != "" {
