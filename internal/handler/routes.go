@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, healthHandler *HealthHandler) {
+func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, transactionHandler *TransactionHandler, healthHandler *HealthHandler) {
 	// Health endpoints
 	mux.HandleFunc("/", healthHandler.Root)
 	mux.HandleFunc("/health", healthHandler.Check)
@@ -58,6 +58,15 @@ func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHan
 		case http.MethodDelete:
 			categoryHandler.Delete(w, r)
 		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Transaction endpoints
+	mux.HandleFunc("/api/transactions/checkout", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			transactionHandler.Checkout(w, r)
+		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})

@@ -31,3 +31,8 @@ type CategoryWriter interface {
 	Update(ctx context.Context, id int, c model.Category) (*model.Category, error)
 	Delete(ctx context.Context, id int) error
 }
+
+// TransactionWriter defines write operations for transactions
+type TransactionWriter interface {
+	CreateTransaction(ctx context.Context, items []model.CheckoutItem) (*model.Transaction, error)
+}

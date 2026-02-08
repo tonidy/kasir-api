@@ -58,6 +58,7 @@ func main() {
 	var productWriter repository.ProductWriter
 	var categoryRepo repository.CategoryReader
 	var categoryWriter repository.CategoryWriter
+	var transactionWriter repository.TransactionWriter
 	var db *database.DB
 
 	// Check if database is configured
@@ -83,6 +84,9 @@ func main() {
 		pgCategoryRepo := postgres.NewCategoryRepository(db.DB)
 		categoryRepo = pgCategoryRepo
 		categoryWriter = pgCategoryRepo
+
+		pgTransactionRepo := postgres.NewTransactionRepository(db.DB)
+		transactionWriter = pgTransactionRepo
 	} else {
 		// Use in-memory repositories
 		fmt.Println("Using in-memory storage")
@@ -103,9 +107,19 @@ func main() {
 	productService := service.NewProductService(productRepo, productWriter)
 	categoryService := service.NewCategoryService(categoryRepo, categoryWriter)
 
+	var transactionService *service.TransactionService
+	if transactionWriter != nil {
+		transactionService = service.NewTransactionService(transactionWriter)
+	}
+
 	// Initialize handlers
 	productHandler := handler.NewProductHandler(productService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+
+	var transactionHandler *handler.TransactionHandler
+	if transactionService != nil {
+		transactionHandler = handler.NewTransactionHandler(transactionService)
+	}
 
 	var healthHandler *handler.HealthHandler
 	if db != nil {
@@ -116,7 +130,7 @@ func main() {
 
 	// Setup routes
 	mux := http.NewServeMux()
-	handler.SetupRoutes(mux, productHandler, categoryHandler, healthHandler)
+	handler.SetupRoutes(mux, productHandler, categoryHandler, transactionHandler, healthHandler)
 
 	// Create server
 	server := &http.Server{
