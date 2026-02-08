@@ -2,9 +2,11 @@ package handler
 
 import (
 	"net/http"
+
+	"kasir-api/pkg/middleware"
 )
 
-func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, transactionHandler *TransactionHandler, reportHandler *ReportHandler, healthHandler *HealthHandler) {
+func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHandler *CategoryHandler, transactionHandler *TransactionHandler, reportHandler *ReportHandler, healthHandler *HealthHandler) http.Handler {
 	// Health endpoints
 	mux.HandleFunc("/", healthHandler.Root)
 	mux.HandleFunc("/health", healthHandler.Check)
@@ -87,4 +89,11 @@ func SetupRoutes(mux *http.ServeMux, productHandler *ProductHandler, categoryHan
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// Apply middleware and return wrapped handler
+	return middleware.LoggingMiddleware(
+		middleware.CORSMiddleware(
+			middleware.RecoveryMiddleware(mux),
+		),
+	)
 }

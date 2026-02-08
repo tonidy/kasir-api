@@ -17,9 +17,14 @@ import (
 	"kasir-api/internal/repository/memory"
 	"kasir-api/internal/repository/postgres"
 	"kasir-api/internal/service"
+	"kasir-api/pkg/logger"
 )
 
 func main() {
+	// Initialize logger
+	logLevel := logger.NewDefault()
+	logger.InitGlobalLogger(logLevel)
+
 	// Check for help flags
 	if len(os.Args) > 1 && (os.Args[1] == "-h" || os.Args[1] == "--help" || os.Args[1] == "help") {
 		printHelp()
@@ -50,6 +55,7 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
+		logger.Error("Failed to load config", "error", err)
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
@@ -65,17 +71,15 @@ func main() {
 	// Check if database is configured
 	if cfg.Database.Host != "" && cfg.Database.DBName != "" {
 		// Use PostgreSQL
+		var err error
 		db, err = database.NewPool(cfg.Database)
 		if err != nil {
+			logger.Error("Failed to connect to database", "error", err)
 			log.Fatalf("Failed to connect to database: %v", err)
 		}
 		defer db.Close()
 
-		// Test connection
-		if err := db.Ping(context.Background()); err != nil {
-			log.Fatalf("Failed to ping database: %v", err)
-		}
-		fmt.Println("Connected to PostgreSQL database")
+		logger.Info("Connected to PostgreSQL database")
 
 		// Create PostgreSQL repositories
 		pgProductRepo := postgres.NewProductRepository(db.DB)
@@ -93,7 +97,7 @@ func main() {
 		reportReader = pgReportRepo
 	} else {
 		// Use in-memory repositories
-		fmt.Println("Using in-memory storage")
+		logger.Info("Using in-memory storage")
 		memProductRepo := memory.NewProductRepository()
 		memCategoryRepo := memory.NewCategoryRepository()
 
@@ -144,12 +148,12 @@ func main() {
 
 	// Setup routes
 	mux := http.NewServeMux()
-	handler.SetupRoutes(mux, productHandler, categoryHandler, transactionHandler, reportHandler, healthHandler)
+	handlerWithMiddleware := handler.SetupRoutes(mux, productHandler, categoryHandler, transactionHandler, reportHandler, healthHandler)
 
 	// Create server
 	server := &http.Server{
 		Addr:         cfg.Server.Host + cfg.Server.Port,
-		Handler:      mux,
+		Handler:      handlerWithMiddleware,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}
@@ -157,7 +161,7 @@ func main() {
 	// Start server in goroutine
 	errChan := make(chan error, 1)
 	go func() {
-		fmt.Printf("Starting server on %s\n", server.Addr)
+		logger.Info("Starting server", "address", server.Addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 		}
@@ -169,10 +173,11 @@ func main() {
 
 	select {
 	case err := <-errChan:
+		logger.Error("Server failed", "error", err)
 		log.Fatalf("Server failed: %v", err)
 	case sig := <-quit:
-		fmt.Printf("Received signal: %v\n", sig)
-		fmt.Println("Shutting down server...")
+		logger.Info("Received shutdown signal", "signal", sig.String())
+		logger.Info("Shutting down server...")
 	}
 
 	// Graceful shutdown
@@ -180,9 +185,9 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("Server shutdown error: %v", err)
+		logger.Error("Server shutdown error", "error", err)
 	} else {
-		fmt.Println("Server stopped gracefully")
+		logger.Info("Server stopped gracefully")
 	}
 }
 
@@ -227,24 +232,28 @@ func runMigrations() {
 
 	cfg, err := config.Load()
 	if err != nil {
+		logger.Error("Failed to load config", "error", err)
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		logger.Error("Database configuration is required for migrations")
 		log.Fatal("Database configuration is required for migrations")
 	}
 
 	db, err := database.NewPool(cfg.Database)
 	if err != nil {
+		logger.Error("Failed to connect to database", "error", err)
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	fmt.Println("Running database migrations...")
+	logger.Info("Running database migrations...")
 	if err := database.RunMigrations(db.DB, "database/migrations"); err != nil {
+		logger.Error("Migration failed", "error", err)
 		log.Fatalf("Migration failed: %v", err)
 	}
-	fmt.Println("Migrations completed successfully")
+	logger.Info("Migrations completed successfully")
 }
 
 func runMigrateReset() {
@@ -267,35 +276,39 @@ func runMigrateReset() {
 
 	cfg, err := config.Load()
 	if err != nil {
+		logger.Error("Failed to load config", "error", err)
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		logger.Error("Database configuration is required for migrations")
 		log.Fatal("Database configuration is required for migrations")
 	}
 
 	db, err := database.NewPool(cfg.Database)
 	if err != nil {
+		logger.Error("Failed to connect to database", "error", err)
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	fmt.Println("⚠️  WARNING: This will drop all tables and data!")
+	logger.Warn("WARNING: This will drop all tables and data!")
 	fmt.Print("Are you sure? Type 'yes' to confirm: ")
 
 	var confirm string
 	fmt.Scanln(&confirm)
 
 	if confirm != "yes" {
-		fmt.Println("Migration reset cancelled")
+		logger.Info("Migration reset cancelled")
 		return
 	}
 
-	fmt.Println("Resetting database migrations...")
+	logger.Info("Resetting database migrations...")
 	if err := database.ResetMigrations(db.DB, "database/migrations"); err != nil {
+		logger.Error("Migration reset failed", "error", err)
 		log.Fatalf("Migration reset failed: %v", err)
 	}
-	fmt.Println("Migrations reset successfully")
+	logger.Info("Migrations reset successfully")
 }
 
 func runSeeds() {
@@ -316,24 +329,28 @@ func runSeeds() {
 
 	cfg, err := config.Load()
 	if err != nil {
+		logger.Error("Failed to load config", "error", err)
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		logger.Error("Database configuration is required for seeding")
 		log.Fatal("Database configuration is required for seeding")
 	}
 
 	db, err := database.NewPool(cfg.Database)
 	if err != nil {
+		logger.Error("Failed to connect to database", "error", err)
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	fmt.Println("Seeding database...")
+	logger.Info("Seeding database...")
 	if err := database.RunSeeds(db.DB, "database/seeds"); err != nil {
+		logger.Error("Seeding failed", "error", err)
 		log.Fatalf("Seeding failed: %v", err)
 	}
-	fmt.Println("Database seeded successfully")
+	logger.Info("Database seeded successfully")
 }
 
 func runRLS() {
@@ -354,40 +371,47 @@ func runRLS() {
 	}
 
 	if len(os.Args) < 3 {
+		logger.Error("Usage: api rls [on|off]")
 		log.Fatal("Usage: api rls [on|off]")
 	}
 
 	action := os.Args[2]
 	if action != "on" && action != "off" {
+		logger.Error("Usage: api rls [on|off]")
 		log.Fatal("Usage: api rls [on|off]")
 	}
 
 	cfg, err := config.Load()
 	if err != nil {
+		logger.Error("Failed to load config", "error", err)
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	if cfg.Database.Host == "" || cfg.Database.DBName == "" {
+		logger.Error("Database configuration is required for RLS management")
 		log.Fatal("Database configuration is required for RLS management")
 	}
 
 	db, err := database.NewPool(cfg.Database)
 	if err != nil {
+		logger.Error("Failed to connect to database", "error", err)
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	if action == "on" {
-		fmt.Println("Enabling Row Level Security...")
+		logger.Info("Enabling Row Level Security...")
 		if err := database.EnableRLS(db.DB, "database/rls"); err != nil {
+			logger.Error("Failed to enable RLS", "error", err)
 			log.Fatalf("Failed to enable RLS: %v", err)
 		}
-		fmt.Println("RLS enabled successfully")
+		logger.Info("RLS enabled successfully")
 	} else {
-		fmt.Println("Disabling Row Level Security...")
+		logger.Info("Disabling Row Level Security...")
 		if err := database.DisableRLS(db.DB, "database/rls"); err != nil {
+			logger.Error("Failed to disable RLS", "error", err)
 			log.Fatalf("Failed to disable RLS: %v", err)
 		}
-		fmt.Println("RLS disabled successfully")
+		logger.Info("RLS disabled successfully")
 	}
 }

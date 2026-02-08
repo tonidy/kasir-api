@@ -25,14 +25,17 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
-	MaxConns int
-	MinConns int
+	Host            string
+	Port            int
+	User            string
+	Password        string
+	DBName          string
+	SSLMode         string
+	MaxConns        int
+	MinConns        int
+	ConnMaxLifetime int // in minutes
+	ConnMaxIdleTime int // in minutes
+	ConnTimeout     int // in seconds
 }
 
 func Load() (*Config, error) {
@@ -68,14 +71,17 @@ func Load() (*Config, error) {
 			WriteTimeout: k.Duration("server.writetimeout"),
 		},
 		Database: DatabaseConfig{
-			Host:     k.String("database.host"),
-			Port:     k.Int("database.port"),
-			User:     k.String("database.user"),
-			Password: k.String("database.password"),
-			DBName:   k.String("database.dbname"),
-			SSLMode:  k.String("database.sslmode"),
-			MaxConns: k.Int("database.maxconns"),
-			MinConns: k.Int("database.minconns"),
+			Host:            k.String("database.host"),
+			Port:            k.Int("database.port"),
+			User:            k.String("database.user"),
+			Password:        k.String("database.password"),
+			DBName:          k.String("database.dbname"),
+			SSLMode:         k.String("database.sslmode"),
+			MaxConns:        k.Int("database.maxconns"),
+			MinConns:        k.Int("database.minconns"),
+			ConnMaxLifetime: k.Int("database.connmaxlifetime"),
+			ConnMaxIdleTime: k.Int("database.connmaxidletime"),
+			ConnTimeout:     k.Int("database.conntimeout"),
 		},
 	}
 
@@ -107,5 +113,14 @@ func setDefaults(cfg *Config) {
 	}
 	if cfg.Database.MinConns == 0 {
 		cfg.Database.MinConns = 5
+	}
+	if cfg.Database.ConnMaxLifetime == 0 {
+		cfg.Database.ConnMaxLifetime = 30 // 30 minutes
+	}
+	if cfg.Database.ConnMaxIdleTime == 0 {
+		cfg.Database.ConnMaxIdleTime = 5 // 5 minutes
+	}
+	if cfg.Database.ConnTimeout == 0 {
+		cfg.Database.ConnTimeout = 30 // 30 seconds
 	}
 }

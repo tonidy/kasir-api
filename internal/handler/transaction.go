@@ -24,13 +24,13 @@ func NewTransactionHandler(svc TransactionService) *TransactionHandler {
 func (h *TransactionHandler) Checkout(w http.ResponseWriter, r *http.Request) {
 	var req model.CheckoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid request body")
+		httputil.HandleError(w, err)
 		return
 	}
 
 	transaction, err := h.svc.Checkout(r.Context(), req)
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 

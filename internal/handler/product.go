@@ -46,7 +46,7 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 
@@ -76,13 +76,13 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := httputil.ParseID(r)
 	if err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		httputil.HandleError(w, err)
 		return
 	}
 
 	product, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 
@@ -110,13 +110,13 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
+		httputil.WriteError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
 	created, err := h.svc.Create(r.Context(), product)
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusCreated, created)
@@ -125,19 +125,19 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := httputil.ParseID(r)
 	if err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		httputil.HandleError(w, err)
 		return
 	}
 
 	var product model.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid request")
+		httputil.HandleError(w, err)
 		return
 	}
 
 	updated, err := h.svc.Update(r.Context(), id, product)
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusOK, updated)
@@ -146,12 +146,12 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := httputil.ParseID(r)
 	if err != nil {
-		httputil.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		httputil.HandleError(w, err)
 		return
 	}
 
 	if err := h.svc.Delete(r.Context(), id); err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusOK, map[string]string{"message": "Data successfully deleted"})

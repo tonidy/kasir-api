@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"kasir-api/internal/model"
+	"kasir-api/pkg/errors"
 	"kasir-api/pkg/httputil"
 )
 
@@ -24,7 +25,7 @@ func NewReportHandler(svc ReportService) *ReportHandler {
 func (h *ReportHandler) Today(w http.ResponseWriter, r *http.Request) {
 	report, err := h.svc.GetTodayReport(r.Context())
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusOK, report)
@@ -35,15 +36,13 @@ func (h *ReportHandler) ByDateRange(w http.ResponseWriter, r *http.Request) {
 	endDate := r.URL.Query().Get("end_date")
 
 	if startDate == "" || endDate == "" {
-		httputil.WriteJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "start_date and end_date are required",
-		})
+		httputil.HandleError(w, errors.FromHTTPCode(http.StatusBadRequest, "start_date and end_date are required"))
 		return
 	}
 
 	report, err := h.svc.GetReportByDateRange(r.Context(), startDate, endDate)
 	if err != nil {
-		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
+		httputil.HandleError(w, err)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusOK, report)
