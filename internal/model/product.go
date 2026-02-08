@@ -7,6 +7,7 @@ type Product struct {
 	Name       string    `json:"name"`
 	Price      int       `json:"price"`
 	Stock      int       `json:"stock"`
+	Active     bool      `json:"active"`
 	CategoryID *int      `json:"category_id,omitempty"`
 	Category   *Category `json:"category,omitempty"`
 }

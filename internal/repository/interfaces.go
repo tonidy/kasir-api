@@ -9,6 +9,7 @@ import (
 type ProductReader interface {
 	FindByID(ctx context.Context, id int) (*model.Product, error)
 	FindAll(ctx context.Context) ([]model.Product, error)
+	FindByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error)
 }
 
 // ProductWriter defines write operations for products

@@ -13,6 +13,7 @@ import (
 type ProductService interface {
 	GetByID(ctx context.Context, id int) (*model.Product, error)
 	GetAll(ctx context.Context) ([]model.Product, error)
+	GetByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error)
 	Create(ctx context.Context, p model.Product) (*model.Product, error)
 	Update(ctx context.Context, id int, p model.Product) (*model.Product, error)
 	Delete(ctx context.Context, id int) error
@@ -27,7 +28,23 @@ func NewProductHandler(svc ProductService) *ProductHandler {
 }
 
 func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	products, err := h.svc.GetAll(r.Context())
+	name := r.URL.Query().Get("name")
+	activeStr := r.URL.Query().Get("active")
+
+	var products []model.Product
+	var err error
+
+	if name != "" || activeStr != "" {
+		var active *bool
+		if activeStr != "" {
+			val := activeStr == "true"
+			active = &val
+		}
+		products, err = h.svc.GetByFilters(r.Context(), name, active)
+	} else {
+		products, err = h.svc.GetAll(r.Context())
+	}
+
 	if err != nil {
 		httputil.WriteError(w, httputil.ErrorStatus(err), err.Error())
 		return
@@ -48,6 +65,7 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			Name:     p.Name,
 			Price:    p.Price,
 			Stock:    p.Stock,
+			Active:   p.Active,
 			Category: catResp,
 		}
 	}
@@ -82,6 +100,7 @@ func (h *ProductHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		Name:     product.Name,
 		Price:    product.Price,
 		Stock:    product.Stock,
+		Active:   product.Active,
 		Category: categoryResp,
 	}
 

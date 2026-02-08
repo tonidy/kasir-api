@@ -13,5 +13,6 @@ type ProductResponse struct {
 	Name     string            `json:"name"`
 	Price    int               `json:"price"`
 	Stock    int               `json:"stock"`
+	Active   bool              `json:"active"`
 	Category *CategoryResponse `json:"category,omitempty"`
 }

@@ -13,11 +13,12 @@ import (
 
 // Mock service for testing
 type mockProductService struct {
-	getByIDFunc func(ctx context.Context, id int) (*model.Product, error)
-	getAllFunc  func(ctx context.Context) ([]model.Product, error)
-	createFunc  func(ctx context.Context, p model.Product) (*model.Product, error)
-	updateFunc  func(ctx context.Context, id int, p model.Product) (*model.Product, error)
-	deleteFunc  func(ctx context.Context, id int) error
+	getByIDFunc      func(ctx context.Context, id int) (*model.Product, error)
+	getAllFunc       func(ctx context.Context) ([]model.Product, error)
+	getByFiltersFunc func(ctx context.Context, name string, active *bool) ([]model.Product, error)
+	createFunc       func(ctx context.Context, p model.Product) (*model.Product, error)
+	updateFunc       func(ctx context.Context, id int, p model.Product) (*model.Product, error)
+	deleteFunc       func(ctx context.Context, id int) error
 }
 
 func (m *mockProductService) GetByID(ctx context.Context, id int) (*model.Product, error) {
@@ -26,6 +27,13 @@ func (m *mockProductService) GetByID(ctx context.Context, id int) (*model.Produc
 
 func (m *mockProductService) GetAll(ctx context.Context) ([]model.Product, error) {
 	return m.getAllFunc(ctx)
+}
+
+func (m *mockProductService) GetByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error) {
+	if m.getByFiltersFunc != nil {
+		return m.getByFiltersFunc(ctx, name, active)
+	}
+	return []model.Product{}, nil
 }
 
 func (m *mockProductService) Create(ctx context.Context, p model.Product) (*model.Product, error) {

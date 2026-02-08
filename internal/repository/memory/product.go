@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"kasir-api/internal/model"
@@ -61,6 +62,31 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error
 			}
 		}
 
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func (r *ProductRepository) FindByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	results := make([]model.Product, 0)
+	for _, p := range r.data {
+		if name != "" && !strings.Contains(strings.ToLower(p.Name), strings.ToLower(name)) {
+			continue
+		}
+		if active != nil && p.Active != *active {
+			continue
+		}
+
+		result := p
+		if p.CategoryID != nil && r.catRepo != nil {
+			if cat, err := r.catRepo.FindByID(ctx, *p.CategoryID); err == nil {
+				result.Category = cat
+			}
+		}
 		results = append(results, result)
 	}
 

@@ -27,6 +27,10 @@ func (s *ProductService) GetAll(ctx context.Context) ([]model.Product, error) {
 	return s.reader.FindAll(ctx)
 }
 
+func (s *ProductService) GetByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error) {
+	return s.reader.FindByFilters(ctx, name, active)
+}
+
 func (s *ProductService) Create(ctx context.Context, p model.Product) (*model.Product, error) {
 	if err := p.Validate(); err != nil {
 		return nil, err

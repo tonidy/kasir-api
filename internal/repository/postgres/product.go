@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"kasir-api/internal/model"
 )
@@ -18,7 +19,7 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 
 func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Product, error) {
 	query := `
-		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.id, c.name, c.description
+		SELECT p.id, p.name, p.price, p.stock, p.active, p.category_id, c.id, c.name, c.description
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		WHERE p.id = $1`
@@ -26,7 +27,7 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Produc
 	var p model.Product
 	var catID sql.NullInt64
 	var catName, catDesc sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &catID, &catName, &catDesc)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.Active, &p.CategoryID, &catID, &catName, &catDesc)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, model.ErrNotFound
@@ -47,7 +48,7 @@ func (r *ProductRepository) FindByID(ctx context.Context, id int) (*model.Produc
 
 func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error) {
 	query := `
-		SELECT p.id, p.name, p.price, p.stock, p.category_id, c.id, c.name, c.description
+		SELECT p.id, p.name, p.price, p.stock, p.active, p.category_id, c.id, c.name, c.description
 		FROM products p
 		LEFT JOIN categories c ON p.category_id = c.id
 		ORDER BY p.id`
@@ -63,7 +64,7 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error
 		var p model.Product
 		var catID sql.NullInt64
 		var catName, catDesc sql.NullString
-		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CategoryID, &catID, &catName, &catDesc); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.Active, &p.CategoryID, &catID, &catName, &catDesc); err != nil {
 			return nil, err
 		}
 
@@ -85,10 +86,62 @@ func (r *ProductRepository) FindAll(ctx context.Context) ([]model.Product, error
 	return products, nil
 }
 
-func (r *ProductRepository) Create(ctx context.Context, p model.Product) (*model.Product, error) {
-	query := `INSERT INTO products (name, price, stock, category_id) VALUES ($1, $2, $3, $4) RETURNING id`
+func (r *ProductRepository) FindByFilters(ctx context.Context, name string, active *bool) ([]model.Product, error) {
+	query := `
+		SELECT p.id, p.name, p.price, p.stock, p.active, p.category_id, c.id, c.name, c.description
+		FROM products p
+		LEFT JOIN categories c ON p.category_id = c.id
+		WHERE 1=1`
 
-	err := r.db.QueryRowContext(ctx, query, p.Name, p.Price, p.Stock, p.CategoryID).Scan(&p.ID)
+	args := []interface{}{}
+	argPos := 1
+
+	if name != "" {
+		query += fmt.Sprintf(" AND p.name ILIKE $%d", argPos)
+		args = append(args, "%"+name+"%")
+		argPos++
+	}
+
+	if active != nil {
+		query += fmt.Sprintf(" AND p.active = $%d", argPos)
+		args = append(args, *active)
+	}
+
+	query += " ORDER BY p.id"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var products []model.Product
+	for rows.Next() {
+		var p model.Product
+		var catID sql.NullInt64
+		var catName, catDesc sql.NullString
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.Active, &p.CategoryID, &catID, &catName, &catDesc); err != nil {
+			return nil, err
+		}
+
+		if catID.Valid {
+			p.Category = &model.Category{
+				ID:          int(catID.Int64),
+				Name:        catName.String,
+				Description: catDesc.String,
+			}
+		}
+
+		products = append(products, p)
+	}
+
+	return products, rows.Err()
+}
+
+func (r *ProductRepository) Create(ctx context.Context, p model.Product) (*model.Product, error) {
+	query := `INSERT INTO products (name, price, stock, active, category_id) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+
+	err := r.db.QueryRowContext(ctx, query, p.Name, p.Price, p.Stock, p.Active, p.CategoryID).Scan(&p.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +149,9 @@ func (r *ProductRepository) Create(ctx context.Context, p model.Product) (*model
 }
 
 func (r *ProductRepository) Update(ctx context.Context, id int, p model.Product) (*model.Product, error) {
-	query := `UPDATE products SET name = $1, price = $2, stock = $3, category_id = $4 WHERE id = $5`
+	query := `UPDATE products SET name = $1, price = $2, stock = $3, active = $4, category_id = $5 WHERE id = $6`
 
-	result, err := r.db.ExecContext(ctx, query, p.Name, p.Price, p.Stock, p.CategoryID, id)
+	result, err := r.db.ExecContext(ctx, query, p.Name, p.Price, p.Stock, p.Active, p.CategoryID, id)
 	if err != nil {
 		return nil, err
 	}
