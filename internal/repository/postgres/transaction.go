@@ -24,11 +24,16 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 	defer tx.Rollback()
 
 	// Batch fetch products with FOR UPDATE to lock rows
-	productIDs := make([]any, len(items))
-	itemMap := make(map[int]int) // product_id -> quantity
-	for i, item := range items {
-		productIDs[i] = item.ProductID
-		itemMap[item.ProductID] = item.Quantity
+	productIDs := make([]any, 0, len(items))
+	itemMap := make(map[int]int) // product_id -> total quantity
+	seenIDs := make(map[int]bool)
+
+	for _, item := range items {
+		if !seenIDs[item.ProductID] {
+			productIDs = append(productIDs, item.ProductID)
+			seenIDs[item.ProductID] = true
+		}
+		itemMap[item.ProductID] += item.Quantity // Sum quantities for duplicate products
 	}
 
 	placeholders := ""
@@ -39,7 +44,7 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 		placeholders += fmt.Sprintf("$%d", i+1)
 	}
 
-	query := fmt.Sprintf("SELECT id, name, price, stock FROM products WHERE id IN (%s) FOR UPDATE", placeholders)
+	query := fmt.Sprintf("SELECT id, name, price, stock, active FROM products WHERE id IN (%s) FOR UPDATE", placeholders)
 	rows, err := tx.QueryContext(ctx, query, productIDs...)
 	if err != nil {
 		return nil, err
@@ -47,15 +52,16 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 	defer rows.Close()
 
 	type productInfo struct {
-		id    int
-		name  string
-		price int
-		stock int
+		id     int
+		name   string
+		price  int
+		stock  int
+		active bool
 	}
 	products := make(map[int]productInfo)
 	for rows.Next() {
 		var p productInfo
-		if err := rows.Scan(&p.id, &p.name, &p.price, &p.stock); err != nil {
+		if err := rows.Scan(&p.id, &p.name, &p.price, &p.stock, &p.active); err != nil {
 			return nil, err
 		}
 		products[p.id] = p
@@ -72,6 +78,10 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, items []m
 		product, exists := products[item.ProductID]
 		if !exists {
 			return nil, fmt.Errorf("%w: product id %d not found", model.ErrNotFound, item.ProductID)
+		}
+
+		if !product.active {
+			return nil, fmt.Errorf("%w: product %s is not active", model.ErrValidation, product.name)
 		}
 
 		if product.stock < item.Quantity {
