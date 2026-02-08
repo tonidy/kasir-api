@@ -38,6 +38,12 @@ components:
           type: integer
         stock:
           type: integer
+        active:
+          type: boolean
+        category_id:
+          type: integer
+        category:
+          $ref: '#/components/schemas/main.Category'
       type: object
     main.Transaction:
       properties:
@@ -65,6 +71,22 @@ components:
         subtotal:
           type: integer
         transaction_id:
+          type: integer
+      type: object
+    main.ReportSummary:
+      properties:
+        total_revenue:
+          type: integer
+        total_transaction:
+          type: integer
+        top_product:
+          $ref: '#/components/schemas/main.TopProduct'
+      type: object
+    main.TopProduct:
+      properties:
+        name:
+          type: string
+        sold_qty:
           type: integer
       type: object
 externalDocs:
@@ -417,6 +439,61 @@ paths:
       summary: Checkout transaction
       tags:
       - Transactions
+  /api/reports:
+    get:
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        required: true
+        schema:
+          type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.ReportSummary'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Bad Request
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Internal Server Error
+      summary: Get report by date range
+      tags:
+      - Reports
+  /api/reports/today:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/main.ReportSummary'
+          description: OK
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Internal Server Error
+      summary: Get today's report
+      tags:
+      - Reports
   /health:
     get:
       responses:
